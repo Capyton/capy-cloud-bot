@@ -1,6 +1,6 @@
-import { Context } from 'grammy'
+import MyContext from '@/models/Context'
 
-export async function handleStart(ctx: Context) {
+export async function handleStart(ctx: MyContext) {
   const userName =
     ctx.message?.from?.first_name + ' ' + ctx.message?.from?.last_name
   const text = `Hi, ${userName}

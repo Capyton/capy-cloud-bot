@@ -1,9 +1,17 @@
+import 'source-map-support'
 import * as dotenv from 'dotenv'
 
 import { run } from '@grammyjs/runner'
-import { Bot, Context } from 'grammy'
+import { sequentialize } from 'grammy-middlewares'
+import { conversations, createConversation } from '@grammyjs/conversations'
+import { Bot, session } from 'grammy'
 
+import MyContext from './models/Context'
 import { handleStart } from './handlers/start'
+import attachCapyCloudApi from './middlewares /CapyCloudMiddleware'
+import { handleDocument } from './handlers/upload'
+import { isAddress } from './filters/isAddress'
+import { handleProvider } from './handlers/providers'
 
 dotenv.config()
 
@@ -15,15 +23,32 @@ async function runApp() {
     return
   }
 
-  const bot = new Bot<Context>(process.env.BOT_TOKEN, {
-    ContextConstructor: Context,
-  })
+  const bot = new Bot<MyContext>(process.env.BOT_TOKEN)
+
+  // Middlewares
+
+  bot.use(
+    session({
+      initial() {
+        return {}
+      },
+    })
+  )
+
+  bot.use(conversations())
+  bot.use(createConversation(handleDocument))
+
+  bot.use(sequentialize()).use(attachCapyCloudApi)
 
   // Commands
   bot.command(['start'], handleStart)
 
-  // New document
-  // bot.on([':document', ':photo'], handleDocument)
+  // @ts-ignore
+  bot.on([':document', ':photo'], async (ctx) => {
+    await ctx.conversation.enter('handleDocument')
+  })
+
+  bot.on(':text', handleProvider).filter(isAddress)
 
   // Errors
   bot.catch(console.error)

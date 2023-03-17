@@ -7,6 +7,11 @@ import { Address, beginCell, Cell, StateInit, storeStateInit } from 'ton-core'
 import { SendProvider } from './SendProvider'
 import { Storage } from '../storage/Storage'
 
+interface ConnectWallet {
+  url: string
+  checker: Promise<void>
+}
+
 class TonConnectStorage implements IStorage {
   #inner: Storage
 
@@ -35,7 +40,7 @@ export class TonConnectProvider implements SendProvider {
   constructor(storage: Storage) {
     this.#connector = new TonConnect({
       storage: new TonConnectStorage(storage),
-      manifestUrl: 'https://json.extendsclass.com/bin/f8d8d66eb15d',
+      manifestUrl: 'https://jsonblob.com/api/jsonBlob/1086334593673740288',
     })
   }
 
@@ -55,14 +60,10 @@ export class TonConnectProvider implements SendProvider {
     return Address.parse(this.#connector.wallet.account.address)
   }
 
-  async connectWallet(): Promise<any> {
+  async connectWallet(): Promise<ConnectWallet> {
     const wallets = (await this.#connector.getWallets()).filter(isRemote)
 
     await this.#connector.restoreConnection()
-
-    if (this.#connector.wallet) {
-      return
-    }
 
     const wallet = wallets[0]
 
@@ -71,17 +72,17 @@ export class TonConnectProvider implements SendProvider {
       bridgeUrl: wallet.bridgeUrl,
     }) as string
 
-    console.log(url)
-
-    return new Promise((resolve, reject) => {
+    const checker = new Promise<void>((resolve, reject) => {
       this.#connector.onStatusChange((w) => {
         if (w) {
-          resolve(w)
+          resolve()
         } else {
           reject('Wallet is not connected')
         }
       }, reject)
     })
+
+    return { url, checker }
   }
 
   async sendTransaction(
