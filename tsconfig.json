@@ -1,20 +1,35 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es6",
-    "lib": ["es2015"],
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "outDir": "dist",
-    "baseUrl": "src",
-    "paths": {
-      "@/*": ["*"]
-    },
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
     "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "emitDecoratorMetadata": true,
+    "declaration": true,
+    "experimentalDecorators": true,
     "esModuleInterop": true,
-    "strictPropertyInitialization": false
+    "incremental": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "resolveJsonModule": true,
+    "strictPropertyInitialization": false,
+    "allowJs": true,
+    "paths": {
+      "@src/*": ["src/*"]
+    },
+    "lib": [
+      "ES2022"
+    ],
+    "typeRoots": [
+      "./types",
+      "./node_modules/@types"
+    ]
   },
-  "include": ["src/**/*"]
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
+  "include": [
+    "./src",
+    "./tests"
+  ]
 }
