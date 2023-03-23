@@ -5,6 +5,7 @@
   "main": "dist/app.js",
   "repository": "https://github.com/capyton/capy-cloud-bot/",
   "scripts": {
+    "start": "yarn ts-node src/app.ts",
     "distribute": "yarn build-ts && node dist/app.js",
     "develop": "tsc-watch --skipLibCheck --onSuccess 'node dist/app.js'",
     "build-ts": "tsc --skipLibCheck",
@@ -22,7 +23,8 @@
     "qrcode": "^1.5.1",
     "source-map-support": "^0.5.21",
     "ton-core": "^0.48.0",
-    "ton-crypto": "^3.2.0"
+    "ton-crypto": "^3.2.0",
+    "ts-node": "^10.9.1"
   },
   "devDependencies": {
     "@types/node": "^18.15.3",
