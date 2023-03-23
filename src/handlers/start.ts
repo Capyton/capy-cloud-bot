@@ -2,7 +2,7 @@ import MyContext from '@/models/Context'
 
 export async function handleStart(ctx: MyContext) {
   const userName =
-    ctx.message?.from?.first_name + ' ' + ctx.message?.from?.last_name
+    ctx.message?.from?.first_name + ' ' + ctx.message?.from?.last_name ? ctx.message?.from?.last_name : ''
   const text = `Hi, ${userName}
 Welcome to CapyCloud, a decentralized and convenient solution for communication with the Ton Storage. 
 
