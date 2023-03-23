@@ -70,7 +70,7 @@ export class TonConnectProvider implements SendProvider {
     const url = this.#connector.connect({
       universalLink: wallet.universalLink,
       bridgeUrl: wallet.bridgeUrl,
-    }) as string
+    })
 
     const checker = new Promise<void>((resolve, reject) => {
       this.#connector.onStatusChange((w) => {

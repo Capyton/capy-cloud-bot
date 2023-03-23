@@ -1,8 +1,8 @@
 import { NextFunction } from 'grammy'
-import CapyCloudAPI from '../services/api'
-import MyContext from '@/models/Context'
+import CapyCloudAPI from '@src/services/capy-cloud/client'
+import MyContext from '@src/models/Context'
 
-function attachCapyCloudAPI(ctx: MyContext, next: NextFunction) {
+export function attachCapyCloudAPI(ctx: MyContext, next: NextFunction) {
   if (!process.env.CapyCloudBaseUrl) {
     console.log('CapyCloudBaseUrl is not set')
     return next()
@@ -13,5 +13,3 @@ function attachCapyCloudAPI(ctx: MyContext, next: NextFunction) {
   )
   return next()
 }
-
-export default attachCapyCloudAPI

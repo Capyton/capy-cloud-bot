@@ -1,7 +1,7 @@
 import { InlineKeyboard, InputFile } from 'grammy'
 
-import MyContext from '@/models/Context'
-import MyConversation from '@/models/Conversation'
+import MyContext from '@src/models/Context'
+import MyConversation from '@src/models/Conversation'
 
 import { TonConnectProvider } from '../services/providers/TonConnectProvider'
 import { FSStorage } from '../services/storage/FSStorage'

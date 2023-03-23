@@ -1,4 +1,4 @@
-import MyContext from '@/models/Context'
+import MyContext from '@src/models/Context'
 
 import { address, fromNano } from 'ton-core'
 

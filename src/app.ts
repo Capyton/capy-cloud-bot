@@ -7,26 +7,26 @@ import { conversations, createConversation } from '@grammyjs/conversations'
 import { Bot, session } from 'grammy'
 
 import MyContext from './models/Context'
-import { handleStart } from './handlers/start'
-import attachCapyCloudApi from './middlewares /CapyCloudMiddleware'
+import { handleStart, handleUnknownUser } from './handlers/start'
+import { attachCapyCloudAPI, DbMiddleware, loggingMiddleware } from './middlewares/'
 import { handleDocument } from './handlers/upload'
-import { isAddress } from './filters/isAddress'
+import { isAddress } from './filters/is-address'
 import { handleProvider } from './handlers/providers'
+import { getDataSource } from './services/db/main'
+import { loadConfigFromEnv } from './services/config-loader'
+import { loadTgUserMiddleware } from './middlewares/tg-user-loader'
+import { unknownUser } from './filters/unknown-user'
 
 dotenv.config()
 
 async function runApp() {
   console.log('Starting app...')
 
-  if (!process.env.BOT_TOKEN) {
-    console.log('Bot token not found')
-    return
-  }
+  const config = loadConfigFromEnv()
 
-  const bot = new Bot<MyContext>(process.env.BOT_TOKEN)
+  const bot = new Bot<MyContext>(config.bot.token)
 
   // Middlewares
-
   bot.use(
     session({
       initial() {
@@ -38,9 +38,20 @@ async function runApp() {
   bot.use(conversations())
   bot.use(createConversation(handleDocument))
 
-  bot.use(sequentialize()).use(attachCapyCloudApi)
+  const dataSource = getDataSource(config.db)
+  await dataSource.initialize()
+      .then(() => console.log("Database initialized"))
+      .catch((err) => console.error(`Database initialization failed with error: \`${err}\``))
+
+  const dbMiddleware = new DbMiddleware(dataSource)
+
+  bot.use(sequentialize()).use(loggingMiddleware)
+  bot.use(sequentialize()).use(dbMiddleware.handle.bind(dbMiddleware))
+  bot.use(sequentialize()).use(loadTgUserMiddleware)
+  bot.use(sequentialize()).use(attachCapyCloudAPI)
 
   // Commands
+  bot.on('message').filter(unknownUser, handleUnknownUser)
   bot.command(['start'], handleStart)
 
   // @ts-ignore
