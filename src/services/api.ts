@@ -13,9 +13,8 @@ class CapyCloudAPI {
   private axiosInstance: AxiosInstance
 
   constructor(apiBaseUrl: string, authToken: string) {
-    console.log('log')
     this.axiosInstance = axios.create({
-      baseURL: apiBaseUrl,
+      baseURL: apiBaseUrl.concat('/api/v1'),
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
@@ -49,7 +48,7 @@ class CapyCloudAPI {
 
   async getProviderParams(providerAddress: string): Promise<ProviderParams> {
     const response: AxiosResponse<ProviderParams> =
-      await this.axiosInstance.get(`/providers/params/${providerAddress}`)
+      await this.axiosInstance.get(`/providers/${providerAddress}/params`)
     return response.data
   }
   async createTorrent(request: CreateTorrentRequest): Promise<Torrent> {
