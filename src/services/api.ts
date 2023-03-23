@@ -41,7 +41,7 @@ class CapyCloudAPI {
   ): Promise<NewContractMessageResponse> {
     const response: AxiosResponse<NewContractMessageResponse> =
       await this.axiosInstance.get(
-        `/providers/new-contract-message/${providerAddress}/${bagId}`
+        `/providers/${providerAddress}/bag/${bagId}/new-contract-message`
       )
     return response.data
   }

@@ -6,13 +6,16 @@ import MyConversation from '@/models/Conversation'
 import { TonConnectProvider } from '../services/providers/TonConnectProvider'
 import { FSStorage } from '../services/storage/FSStorage'
 import { generateQRCode } from '../utils/qr'
+import { convertBytes } from './providers'
 
 export async function handleDocument(
   conversations: MyConversation,
   ctx: MyContext
 ) {
+  const fileSize = ctx.message?.photo ? ctx.message.photo.at(-1)?.file_size  :  ctx.message?.document?.file_size
+
   await ctx.reply(
-    'Get it! How many TON you ready to spend to store this file? (Note that 1 TON is enough to store this file for 6 month)'
+    `Get it! How many TON you ready to spend to store this file? (Note that ${10} TON is enough to store this file for 3 months)`
   )
 
   const amount = await conversations.form.number()
@@ -43,6 +46,9 @@ export async function handleDocument(
       await ctx.reply('Login to your wallet: ' + provider.address())
     })
     .catch(async () => {
-      await ctx.reply("Can't login to your wallet")
+      await ctx.reply("Can't login to your wallet. Try to upload file again.")
+      return;
     })
+  
+
 }

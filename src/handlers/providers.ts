@@ -1,8 +1,8 @@
 import MyContext from '@/models/Context'
 
-import { fromNano } from 'ton-core'
+import { address, fromNano } from 'ton-core'
 
-const convertBytes = function(bytes: number) {
+export const convertBytes = function(bytes: number) {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"]
 
   if (bytes == 0) {
@@ -20,11 +20,14 @@ const convertBytes = function(bytes: number) {
 
 export async function handleProvider(ctx: MyContext) {
   const providerAddress = ctx.message?.text
-  // @ts-ignore
+  if (!providerAddress) {
+    return
+  }
   const providerInfo = await ctx.CapyCloudAPI.getProviderParams(providerAddress)
 
+  
   const textAboutProvider = `
-Provider: <code>${providerAddress}</code>
+Provider: <code>${address(providerAddress).toString()}</code>  
 
 Max file size: ${convertBytes(providerInfo.maxFileSize)}
 Min file size: ${convertBytes(providerInfo.minFileSize)}
