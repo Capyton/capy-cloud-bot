@@ -6,16 +6,20 @@ import { sequentialize } from 'grammy-middlewares'
 import { conversations, createConversation } from '@grammyjs/conversations'
 import { Bot, session } from 'grammy'
 
-import MyContext from './models/Context'
-import { handleStart, handleUnknownUser } from './handlers/start'
-import { attachCapyCloudAPI, DbMiddleware, loggingMiddleware } from './middlewares/'
-import { handleDocument } from './handlers/upload'
-import { isAddress } from './filters/is-address'
-import { handleProvider } from './handlers/providers'
+import MyContext from './tgbot/models/Context'
+import { handleStart, handleUnknownUser } from './tgbot/handlers/start'
+import {
+  attachCapyCloudAPI,
+  DbMiddleware,
+  loggingMiddleware,
+} from './tgbot/middlewares/'
+import { handleDocument } from './tgbot/handlers/upload'
+import { isAddress } from './tgbot/filters/is-address'
+import { handleProvider } from './tgbot/handlers/providers'
 import { getDataSource } from './services/db/main'
 import { loadConfigFromEnv } from './services/config-loader'
-import { loadTgUserMiddleware } from './middlewares/tg-user-loader'
-import { unknownUser } from './filters/unknown-user'
+import { loadTgUserMiddleware } from './tgbot/middlewares/tg-user-loader'
+import { unknownUser } from './tgbot/filters/unknown-user'
 
 dotenv.config()
 
@@ -25,9 +29,12 @@ async function runApp() {
   const config = loadConfigFromEnv()
 
   const dataSource = getDataSource(config.db)
-  await dataSource.initialize()
-      .then(() => console.log("Database initialized"))
-      .catch((err) => console.error(`Database initialization failed with error: \`${err}\``))
+  await dataSource
+    .initialize()
+    .then(() => console.log('Database initialized'))
+    .catch((err) =>
+      console.error(`Database initialization failed with error: \`${err}\``)
+    )
 
   const bot = new Bot<MyContext>(config.bot.token)
 
@@ -36,7 +43,13 @@ async function runApp() {
 
   bot
     .use(loggingMiddleware)
-    .use(session({initial() {return {}}}))
+    .use(
+      session({
+        initial() {
+          return {}
+        },
+      })
+    )
     .use(conversations())
     .use(createConversation(handleDocument))
     .use(sequentialize())

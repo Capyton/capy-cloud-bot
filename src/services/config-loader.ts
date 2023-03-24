@@ -1,6 +1,7 @@
-import { BotConfig, Config } from "@src/config"
+import { Config } from "@src/config"
 import { DbConfig } from "@src/services/db/config"
 import { CapyCloudAPIConfig } from "./capy-cloud/config"
+import { BotConfig } from "@src/tgbot/config"
 
 export function loadConfigFromEnv(): Config {
 

@@ -1,11 +1,7 @@
 import { CapyCloudAPIConfig } from "./services/capy-cloud/config";
 import { DbConfig } from "./services/db/config";
+import { BotConfig } from "./tgbot/config";
 
-export class BotConfig {
-  constructor(
-    public readonly token: string,
-  ) {}
-}
 
 export class Config {
   constructor(

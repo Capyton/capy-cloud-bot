@@ -1,4 +1,4 @@
-import Context from '@src/models/Context'
+import Context from '@src/tgbot/models/Context'
 
 import { Address } from 'ton-core'
 
