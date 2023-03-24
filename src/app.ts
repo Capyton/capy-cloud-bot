@@ -20,6 +20,8 @@ import { getDataSource } from './services/db/main'
 import { loadConfigFromEnv } from './services/config-loader'
 import { loadTgUserMiddleware } from './tgbot/middlewares/tg-user-loader'
 import { unknownUser } from './tgbot/filters/unknown-user'
+import { unloggedUser } from './tgbot/filters/unlogged-user'
+import { handleTonConnectionLogin, handleTonConnectionLogout } from './tgbot/handlers/ton-connect'
 
 dotenv.config()
 
@@ -59,7 +61,9 @@ async function runApp() {
 
   // Commands
   bot.on('message').filter(unknownUser, handleUnknownUser)
-  bot.command(['start'], handleStart)
+  bot.command(['start']).filter(unloggedUser, handleTonConnectionLogin)
+  bot.command(['login'], handleTonConnectionLogin)
+  bot.command(['logout'], handleTonConnectionLogout)
 
   // @ts-ignore
   bot.on([':document', ':photo'], async (ctx) => {

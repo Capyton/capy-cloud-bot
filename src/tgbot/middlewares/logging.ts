@@ -9,7 +9,7 @@ export async function loggingMiddleware(ctx: MyContext, next: NextFunction) {
     })
     .catch((err) => {
       console.error(
-        `An error occured during handling this ${ctx.update.update_id} update: ${err}`
+        `An error occured during handling this ${ctx.update.update_id} update:`, err,
       )
     })
 }

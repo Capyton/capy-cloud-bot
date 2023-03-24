@@ -7,5 +7,6 @@ export class TgUser {
         readonly firstName: string,
         readonly lastName: string | null,
         readonly username: string | null,
+        public tonAddress: string | null = null,
     ) { }
 }

@@ -21,6 +21,6 @@ export class TgUser {
   @Column({ type: String, name: "username", nullable: true })
   username: string | null
 
-  // @Column({ name: "address", unique: true, nullable: false })
-  // address: string
+  @Column({ type: String, name: "ton_address", nullable: true })
+  tonAddress: string | null
 }

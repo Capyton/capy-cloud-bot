@@ -9,7 +9,8 @@ export async function handleUnknownUser(ctx: MyContext) {
     fromUser.id,
     fromUser.first_name,
     fromUser.last_name || null,
-    fromUser.username || null
+    fromUser.username || null,
+    null,
   )
   await ctx.tgUserRepo.addTgUser(tgUser)
   await ctx.uow.commit()

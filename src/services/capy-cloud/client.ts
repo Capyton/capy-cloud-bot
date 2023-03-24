@@ -7,7 +7,7 @@ import {
   File,
   CreateTorrentRequest,
   Torrent,
-} from '@src/schemas/api'
+} from './schemas/api'
 
 class CapyCloudAPI {
   private axiosInstance: AxiosInstance
