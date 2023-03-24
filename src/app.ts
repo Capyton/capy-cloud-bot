@@ -24,31 +24,25 @@ async function runApp() {
 
   const config = loadConfigFromEnv()
 
-  const bot = new Bot<MyContext>(config.bot.token)
-
-  // Middlewares
-  bot.use(
-    session({
-      initial() {
-        return {}
-      },
-    })
-  )
-
-  bot.use(conversations())
-  bot.use(createConversation(handleDocument))
-
   const dataSource = getDataSource(config.db)
   await dataSource.initialize()
       .then(() => console.log("Database initialized"))
       .catch((err) => console.error(`Database initialization failed with error: \`${err}\``))
 
+  const bot = new Bot<MyContext>(config.bot.token)
+
+  // Middlewares
   const dbMiddleware = new DbMiddleware(dataSource)
 
-  bot.use(sequentialize()).use(loggingMiddleware)
-  bot.use(sequentialize()).use(dbMiddleware.handle.bind(dbMiddleware))
-  bot.use(sequentialize()).use(loadTgUserMiddleware)
-  bot.use(sequentialize()).use(attachCapyCloudAPI)
+  bot
+    .use(loggingMiddleware)
+    .use(session({initial() {return {}}}))
+    .use(conversations())
+    .use(createConversation(handleDocument))
+    .use(sequentialize())
+    .use(dbMiddleware.handle.bind(dbMiddleware))
+    .use(loadTgUserMiddleware)
+    .use(attachCapyCloudAPI)
 
   // Commands
   bot.on('message').filter(unknownUser, handleUnknownUser)
