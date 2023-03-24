@@ -1,5 +1,4 @@
 import { QueryRunner } from 'typeorm'
-import { UUID } from '@src/utils/uuid'
 import { TgUser } from '@src/entities/tg-user'
 import { TgUser as TgUserModel } from '@src/services/db/models'
 
@@ -18,5 +17,9 @@ export class TgUserRepoImpl {
 
   async addTgUser(user: TgUser): Promise<void> {
     await this.queryRunner.manager.insert(TgUserModel, user)
+  }
+
+  async updateTgUser(user: TgUser): Promise<void> {
+    await this.queryRunner.manager.update(TgUserModel, user.id, user)
   }
 }

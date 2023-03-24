@@ -7,7 +7,7 @@ import { conversations, createConversation } from '@grammyjs/conversations'
 import { Bot, session } from 'grammy'
 
 import MyContext from './tgbot/models/Context'
-import { handleStart, handleUnknownUser } from './tgbot/handlers/start'
+import { handleUnknownUser } from './tgbot/handlers/start'
 import {
   attachCapyCloudAPI,
   DbMiddleware,
@@ -69,7 +69,6 @@ async function runApp() {
   bot.on([':document', ':photo'], async (ctx) => {
     await ctx.conversation.enter('handleDocument')
   })
-
   bot.on(':text', handleProvider).filter(isAddress)
 
   // Errors

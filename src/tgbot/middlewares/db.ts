@@ -23,6 +23,7 @@ export class DbMiddleware {
   async handle(ctx: MyContext, next: NextFunction) {
     const queryRunner = await this.getQueryRunner()
 
+    ctx.dataSource = this.dataSource
     ctx.uow = new TypeORMUnitOfWork(queryRunner)
     ctx.tgUserRepo = new TgUserRepoImpl(queryRunner)
 
