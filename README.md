@@ -1,4 +1,6 @@
-# Installation and local launch
+# Capy Cloud bot
+
+### Installation and local launch
 
 1. Clone this repo
 2. Create `.env` with
