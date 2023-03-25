@@ -1,5 +1,5 @@
 import { NextFunction } from 'grammy'
-import CapyCloudAPI from '@src/services/capy-cloud/client'
+import CapyCloudAPI from '@src/infrastructure/capy-cloud/client'
 import MyContext from '@src/tgbot/models/Context'
 
 export function attachCapyCloudAPI(ctx: MyContext, next: NextFunction) {

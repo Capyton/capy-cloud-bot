@@ -4,7 +4,7 @@ import TonConnect, {
   WalletInfoRemote,
 } from '@tonconnect/sdk'
 import { Address, beginCell, Cell, StateInit, storeStateInit } from 'ton-core'
-import { Storage } from '@src/services/storage/Storage'
+import { Storage } from '@src/infrastructure/storage/Storage'
 import { SendProvider } from './SendProvider'
 
 interface ConnectWallet {

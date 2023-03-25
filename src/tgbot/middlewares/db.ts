@@ -1,8 +1,8 @@
 import { NextFunction } from 'grammy'
 import MyContext from '@src/tgbot/models/Context'
 import { DataSource, QueryRunner } from 'typeorm'
-import { TgUserRepoImpl } from '@src/services/db/repositories/tg-user'
-import { TypeORMUnitOfWork } from '@src/services/db/uow'
+import { TgUserRepoImpl } from '@src/infrastructure/db/repositories/tg-user'
+import { TypeORMUnitOfWork } from '@src/infrastructure/db/uow'
 
 export class DbMiddleware {
   constructor(private readonly dataSource: DataSource) {}

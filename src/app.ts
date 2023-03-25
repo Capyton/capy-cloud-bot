@@ -16,12 +16,15 @@ import {
 import { handleDocument } from './tgbot/handlers/upload'
 import { isAddress } from './tgbot/filters/is-address'
 import { handleProvider } from './tgbot/handlers/providers'
-import { getDataSource } from './services/db/main'
-import { loadConfigFromEnv } from './services/config-loader'
+import { getDataSource } from './infrastructure/db/main'
+import { loadConfigFromEnv } from './infrastructure/config-loader'
 import { loadTgUserMiddleware } from './tgbot/middlewares/tg-user-loader'
 import { unknownUser } from './tgbot/filters/unknown-user'
 import { unloggedUser } from './tgbot/filters/unlogged-user'
-import { handleTonConnectionLogin, handleTonConnectionLogout } from './tgbot/handlers/ton-connect'
+import {
+  handleTonConnectionLogin,
+  handleTonConnectionLogout,
+} from './tgbot/handlers/ton-connect'
 
 dotenv.config()
 

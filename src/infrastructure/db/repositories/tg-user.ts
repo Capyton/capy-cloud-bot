@@ -1,6 +1,6 @@
 import { QueryRunner } from 'typeorm'
 import { TgUser } from '@src/entities/tg-user'
-import { TgUser as TgUserModel } from '@src/services/db/models'
+import { TgUser as TgUserModel } from '@src/infrastructure/db/models'
 
 export class TgUserRepoImpl {
   constructor(private readonly queryRunner: QueryRunner) {}
