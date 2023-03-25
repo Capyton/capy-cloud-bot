@@ -60,7 +60,7 @@ export class TonConnectProvider implements SendProvider {
     return Address.parse(this.#connector.wallet.account.address)
   }
 
-  async connectWallet(): Promise<ConnectWallet> {
+  async connectWallet(tonProof?: string): Promise<ConnectWallet> {
     const wallets = (await this.#connector.getWallets()).filter(isRemote)
 
     await this.#connector.restoreConnection()
@@ -70,7 +70,7 @@ export class TonConnectProvider implements SendProvider {
     const url = this.#connector.connect({
       universalLink: wallet.universalLink,
       bridgeUrl: wallet.bridgeUrl,
-    })
+    }, { tonProof: tonProof })
 
     const checker = new Promise<void>((resolve, reject) => {
       this.#connector.onStatusChange((w) => {

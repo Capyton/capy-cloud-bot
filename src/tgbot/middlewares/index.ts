@@ -1,3 +1,4 @@
 export { DbMiddleware } from "./db"
-export { attachCapyCloudAPI } from "./capy-cloud"
+export { CapyCloudAPIMiddleware } from "./capy-cloud"
 export { loggingMiddleware } from "./logging"
+export { loadTgUserMiddleware } from "./tg-user-loader"

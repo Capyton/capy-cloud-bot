@@ -8,7 +8,7 @@ import { TgUser } from '@src/entities/tg-user'
 import { DataSource } from 'typeorm'
 
 class Context extends BaseContext {
-  CapyCloudAPI: CapyCloudAPI
+  capyCloudAPI: CapyCloudAPI
   dataSource: DataSource
   uow: TypeORMUnitOfWork
   tgUserRepo: TgUserRepoImpl

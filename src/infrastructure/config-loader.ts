@@ -18,8 +18,8 @@ export function loadConfigFromEnv(): Config {
   )
 
   const capyCloudApiConfig = new CapyCloudAPIConfig(
-    process.env.API_HOST || '',
-    process.env.API_PORT || ''
+    process.env.CAPY_CLOUD_BACKEND_HOST || '',
+    process.env.AUTH_TOKEN || ''
   )
 
   return new Config(botConfig, databaseConfig, capyCloudApiConfig)

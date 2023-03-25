@@ -9,22 +9,23 @@ import { Bot, session } from 'grammy'
 import MyContext from './tgbot/models/Context'
 import { handleUnknownUser } from './tgbot/handlers/start'
 import {
-  attachCapyCloudAPI,
+  CapyCloudAPIMiddleware,
   DbMiddleware,
   loggingMiddleware,
+  loadTgUserMiddleware,
 } from './tgbot/middlewares/'
 import { handleDocument } from './tgbot/handlers/upload'
 import { isAddress } from './tgbot/filters/is-address'
 import { handleProvider } from './tgbot/handlers/providers'
 import { getDataSource } from './infrastructure/db/main'
 import { loadConfigFromEnv } from './infrastructure/config-loader'
-import { loadTgUserMiddleware } from './tgbot/middlewares/tg-user-loader'
 import { unknownUser } from './tgbot/filters/unknown-user'
 import { unloggedUser } from './tgbot/filters/unlogged-user'
 import {
   handleTonConnectionLogin,
   handleTonConnectionLogout,
 } from './tgbot/handlers/ton-connect'
+import { initCapyCloudClient } from './infrastructure/capy-cloud/main'
 
 dotenv.config()
 
@@ -41,11 +42,13 @@ async function runApp() {
       console.error(`Database initialization failed with error: \`${err}\``)
     )
 
+  const capyCloudClient = initCapyCloudClient(config.capyCloud)
+
   const bot = new Bot<MyContext>(config.bot.token)
 
   // Middlewares
   const dbMiddleware = new DbMiddleware(dataSource)
-
+  const capyCloudAPIMiddleware = new CapyCloudAPIMiddleware(capyCloudClient)
   bot
     .use(loggingMiddleware)
     .use(
@@ -60,7 +63,7 @@ async function runApp() {
     .use(sequentialize())
     .use(dbMiddleware.handle.bind(dbMiddleware))
     .use(loadTgUserMiddleware)
-    .use(attachCapyCloudAPI)
+    .use(capyCloudAPIMiddleware.handle.bind(capyCloudAPIMiddleware))
 
   // Commands
   bot.on('message').filter(unknownUser, handleUnknownUser)

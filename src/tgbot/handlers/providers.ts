@@ -23,7 +23,7 @@ export async function handleProvider(ctx: MyContext) {
   if (!providerAddress) {
     return
   }
-  const providerInfo = await ctx.CapyCloudAPI.getProviderParams(providerAddress)
+  const providerInfo = await ctx.capyCloudAPI.getProviderParams(providerAddress)
 
   const textAboutProvider = `
 Provider: <code>${address(providerAddress).toString()}</code>  
