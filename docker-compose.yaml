@@ -47,3 +47,5 @@ volumes:
 
 networks:
   capy-cloud-bot.postgres.network: {}
+  capy-cloud-backend.api.network:
+    external: true
