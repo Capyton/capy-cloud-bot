@@ -7,6 +7,8 @@ import {
   File,
   CreateTorrentRequest,
   Torrent,
+  AuthPayload,
+  AuthToken,
 } from './schemas/api'
 
 class CapyCloudAPI {
@@ -19,6 +21,22 @@ class CapyCloudAPI {
         Authorization: `Bearer ${authToken}`,
       },
     })
+  }
+
+  async generatePayload(): Promise<AuthPayload> {
+    const response: AxiosResponse<AuthPayload> = await this.axiosInstance.post('/auth/payload')
+    if (response.status !== 201) {
+      throw new Error('Failed to generate payload')
+    }
+    return response.data
+  }
+
+  async verifyPayload(data: any): Promise<AuthToken> {
+    const response: AxiosResponse<AuthToken> = await this.axiosInstance.post('/auth', data)
+    if (response.status !== 201) {
+      throw new Error('Failed to verify payload')
+    }
+    return response.data
   }
 
   async getAllProviders(): Promise<Provider[]> {

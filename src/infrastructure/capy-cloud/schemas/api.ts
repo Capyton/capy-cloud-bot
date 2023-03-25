@@ -60,3 +60,11 @@ export interface Torrent {
   fatalError?: string
   files: File[]
 }
+
+export interface AuthPayload {
+  nonce: string
+}
+
+export interface AuthToken {
+  token: string
+}
