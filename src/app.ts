@@ -38,9 +38,9 @@ async function runApp() {
   await dataSource
     .initialize()
     .then(() => console.log('Database initialized'))
-    .catch((err) =>
-      console.error(`Database initialization failed with error: \`${err}\``)
-    )
+    .catch((err) => {
+      throw new Error(`Database initialization failed with error: \`${err}\``)
+    })
 
   const capyCloudClient = initCapyCloudClient(config.capyCloud)
 
