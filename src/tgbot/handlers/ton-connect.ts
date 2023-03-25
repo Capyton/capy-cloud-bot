@@ -17,23 +17,25 @@ export async function handleTonConnectionLogin(ctx: MyContext) {
   const tgUser = ctx.tgUser
 
   const provider = new TonConnectProvider(
-    // @ts-ignore
-    new FSStorage(STORAGE_PATH + ctx.message?.from.id.toString())
+    new FSStorage(STORAGE_PATH + tgUser.id.toString()),
   )
-  const walletConnect = await provider.connectWallet().catch(async (err) => {
-    const tonAddress = provider.address()
-    if (!tonAddress) {
-      throw err
-    }
-    tgUser.tonAddress = tonAddress.toString()
-    await ctx.tgUserRepo.updateTgUser(tgUser)
-    await ctx.uow.commit()
 
-    await ctx.reply('Login to your wallet: ' + tgUser.tonAddress)
-    await ctx.reply(
-      'Now you can upload your files, or send a ready-made bagID our bot will do the rest of the work.'
-    )
-  })
+  const walletConnect = await provider
+    .connectWallet()
+    .catch(async (err) => {
+      const tonAddress = provider.address()
+      if (!tonAddress) {
+        throw err
+      }
+      tgUser.tonAddress = tonAddress.toString()
+      await ctx.tgUserRepo.updateTgUser(tgUser)
+      await ctx.uow.commit()
+
+      await ctx.reply('Login to your wallet: ' + tgUser.tonAddress)
+      await ctx.reply(
+        'Now you can upload your files, or send a ready-made bagID our bot will do the rest of the work.'
+      )
+    })
   if (!walletConnect) {
     return
   }
