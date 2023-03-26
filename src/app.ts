@@ -75,7 +75,7 @@ async function runApp() {
   bot.on([':document', ':photo'], async (ctx) => {
     await ctx.conversation.enter('handleDocument')
   })
-  bot.on(':text', handleProvider).filter(isAddress)
+  bot.filter(isAddress).on(':text', handleProvider)
 
   // Errors
   bot.catch(console.error)
