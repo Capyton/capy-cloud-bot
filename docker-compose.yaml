@@ -14,8 +14,6 @@ services:
         condition: service_healthy
     networks:
       - capy-cloud-bot.postgres.network
-    volumes:
-      - capy-cloud-bot.tgbot.data:/usr/src/app/${UPLOAD_DIR}:rw
 
   postgres:
     container_name: capy-cloud-bot.postgres
@@ -24,14 +22,14 @@ services:
     restart: unless-stopped
     expose:
       - "5432"
-    ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    # ports:
+    #   - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     networks:
       - capy-cloud-bot.postgres.network
     environment:
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
       POSTGRES_USER: ${POSTGRES_USER:-$USER}
-      POSTGRES_DB: ${POSTGRES_DB:-${POSTGRES_USER:-$USER}}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - capy-cloud-bot.postgres.data:/var/lib/postgresql/users:rw
     healthcheck:
@@ -47,5 +45,3 @@ volumes:
 
 networks:
   capy-cloud-bot.postgres.network: {}
-  capy-cloud-backend.api.network:
-    external: true
