@@ -15,7 +15,7 @@ services:
     networks:
       - capy-cloud-bot.postgres.network
     volumes:
-      - capy-cloud-bot.tgbot.tc-session:/usr/src/app/${TON_CONNECT_SESSIONS_DIR}:rw
+      - capy-cloud-bot.tgbot.tc-session:/usr/src/app/${TON_CONNECT_SESSIONS_DIR:?}:rw
 
   postgres:
     container_name: capy-cloud-bot.postgres
@@ -31,7 +31,7 @@ services:
     environment:
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
       POSTGRES_USER: ${POSTGRES_USER:-$USER}
-      POSTGRES_DB: ${POSTGRES_DB:-${POSTGRES_USER:-$USER}}
+      POSTGRES_DB: ${POSTGRES_DB:-$USER}
     volumes:
       - capy-cloud-bot.postgres.data:/var/lib/postgresql/users:rw
     healthcheck:
