@@ -1,15 +1,16 @@
 /* eslint-disable indent */
 
-import { Column, Entity, PrimaryColumn } from "typeorm"
+import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm"
 
 import { UUID } from "@src/utils/uuid"
+import { AuthTokens } from "./auth-tokens"
 
 @Entity({ name: "tg_users" })
 export class TgUser {
-  @PrimaryColumn({ name: "id" })
+  @PrimaryColumn({ type: "uuid", name: "id" })
   id: UUID
 
-  @Column({ name: "tg_id", unique: true, nullable: false })
+  @Column({ type: "bigint", name: "tg_id", unique: true, nullable: false })
   tgId: number
 
   @Column({ name: "first_name", nullable: false })
@@ -23,4 +24,7 @@ export class TgUser {
 
   @Column({ type: String, name: "ton_address", nullable: true })
   tonAddress: string | null
+
+  @OneToMany(() => AuthTokens, (authTokens) => authTokens.tgUser, { onDelete: "CASCADE", onUpdate: "CASCADE" })
+  refreshTokens: AuthTokens[]
 }

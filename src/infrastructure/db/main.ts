@@ -1,6 +1,6 @@
 import { DataSource } from "typeorm"
 import { DbConfig } from "./config"
-import { TgUser } from "./models"
+import { AuthTokens, TgUser } from "./models"
 
 export function getDataSource(config: DbConfig): DataSource {
   const dataSource = new DataSource({
@@ -14,7 +14,7 @@ export function getDataSource(config: DbConfig): DataSource {
       logging: true,
       subscribers: [],
       migrations: [],
-      entities: [TgUser],
+      entities: [AuthTokens, TgUser],
   })
 
   return dataSource
