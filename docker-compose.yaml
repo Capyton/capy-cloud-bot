@@ -15,7 +15,7 @@ services:
     networks:
       - capy-cloud-bot.postgres.network
     volumes:
-      - capy-cloud-bot.tgbot.data:/usr/src/app/${UPLOAD_DIR}:rw
+      - capy-cloud-bot.tgbot.tc-session:/usr/src/app/${TON_CONNECT_SESSIONS_DIR}:rw
 
   postgres:
     container_name: capy-cloud-bot.postgres
@@ -42,7 +42,7 @@ services:
       start_period: 10s
 
 volumes:
-  capy-cloud-bot.tgbot.data: {}
+  capy-cloud-bot.tgbot.tc-session: {}
   capy-cloud-bot.postgres.data: {}
 
 networks:
