@@ -8,8 +8,10 @@ import {
   CreateTorrentRequest,
   Torrent,
   AuthPayload,
-  AuthToken,
+  AuthTokens,
+  Proof,
 } from './schemas/api'
+import { TonProofItemReplySuccess, Wallet, toUserFriendlyAddress } from '@tonconnect/sdk'
 
 class CapyCloudAPI {
   private axiosInstance: AxiosInstance
@@ -24,15 +26,32 @@ class CapyCloudAPI {
   }
 
   async generatePayload(): Promise<AuthPayload> {
-    const response: AxiosResponse<AuthPayload> = await this.axiosInstance.post('/auth/payload')
+    const response: AxiosResponse<AuthPayload> = await this.axiosInstance.post(
+      '/auth/payload'
+    )
     if (response.status !== 201) {
       throw new Error('Failed to generate payload')
     }
     return response.data
   }
 
-  async verifyPayload(data: any): Promise<AuthToken> {
-    const response: AxiosResponse<AuthToken> = await this.axiosInstance.post('/auth', data)
+  async verifyPayload(wallet: Wallet): Promise<AuthTokens> {
+    const tonProof = (wallet.connectItems?.tonProof as TonProofItemReplySuccess).proof
+    const tonAddress = toUserFriendlyAddress(wallet.account.address)
+    const proof: Proof = {
+      payloadNonce: tonProof.payload,
+      signature: tonProof.signature,
+      address: tonAddress,
+      network: wallet.account.chain,
+      timestamp: tonProof.timestamp,
+      domainLengthBytes: tonProof.domain.lengthBytes,
+      domainValue: tonProof.domain.value,
+      stateInit: wallet.account.walletStateInit,
+    }
+    const response: AxiosResponse<AuthTokens> = await this.axiosInstance.post(
+      '/auth',
+      proof
+    )
     if (response.status !== 201) {
       throw new Error('Failed to verify payload')
     }

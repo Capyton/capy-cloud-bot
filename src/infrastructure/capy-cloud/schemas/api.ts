@@ -65,6 +65,18 @@ export interface AuthPayload {
   nonce: string
 }
 
-export interface AuthToken {
-  token: string
+export interface AuthTokens {
+  accessToken: string
+  refreshToken: string
+}
+
+export interface Proof {
+  payloadNonce: string
+  address: string
+  network: "-3" | "-239"
+  signature: string
+  timestamp: number
+  domainLengthBytes: number
+  domainValue: string
+  stateInit: string
 }
