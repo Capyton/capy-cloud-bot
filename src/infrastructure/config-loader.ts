@@ -21,6 +21,6 @@ export function loadConfigFromEnv(): Config {
     process.env.CAPY_CLOUD_BACKEND_HOST || '',
     process.env.AUTH_TOKEN || ''
   )
-
-  return new Config(botConfig, databaseConfig, capyCloudApiConfig)
+  const providerAddress = process.env.defaultProvider!
+  return new Config(botConfig, databaseConfig, capyCloudApiConfig, providerAddress)
 }

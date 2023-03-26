@@ -7,7 +7,7 @@ import { conversations, createConversation } from '@grammyjs/conversations'
 import { Bot, session } from 'grammy'
 
 import MyContext from './tgbot/models/Context'
-import { handleUnknownUser } from './tgbot/handlers/start'
+import { handleStart, handleUnknownUser } from './tgbot/handlers/start'
 import {
   CapyCloudAPIMiddleware,
   DbMiddleware,
@@ -26,6 +26,7 @@ import {
   handleTonConnectionLogout,
 } from './tgbot/handlers/ton-connect'
 import { initCapyCloudClient } from './infrastructure/capy-cloud/main'
+import { handleSettings } from './tgbot/handlers/settings'
 
 dotenv.config()
 
@@ -67,11 +68,13 @@ async function runApp() {
 
   // Commands
   bot.on('message').filter(unknownUser, handleUnknownUser)
-  bot.command(['start']).filter(unloggedUser, handleTonConnectionLogin)
+  bot.filter(unloggedUser).command(['start'], handleTonConnectionLogin)
+  bot.command(['start'], handleStart)
   bot.command(['login'], handleTonConnectionLogin)
   bot.command(['logout'], handleTonConnectionLogout)
 
-  // @ts-ignore
+  bot.callbackQuery('settings', handleSettings)
+
   bot.on([':document', ':photo'], async (ctx) => {
     await ctx.conversation.enter('handleDocument')
   })
