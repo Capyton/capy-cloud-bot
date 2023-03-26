@@ -6,6 +6,5 @@ export class AuthTokens {
         readonly accessToken: string,
         readonly refreshToken: string,
         readonly tgUserId: UUID,
-        readonly tonAddress: string | null = null,
     ) { }
 }

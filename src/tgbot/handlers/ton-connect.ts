@@ -7,8 +7,12 @@ import { FSStorage } from '@src/infrastructure/storage/FSStorage'
 import { generateQRCode } from '@src/utils/qr'
 import { TgUserRepoImpl } from '@src/infrastructure/db/repositories/tg-user'
 import { TypeORMUnitOfWork } from '@src/infrastructure/db/uow'
+import { Wallet } from '@tonconnect/sdk'
+import { AuthTokensRepoImpl } from '@src/infrastructure/db/repositories/auth-tokens'
+import { AuthTokens } from '@src/entities/auth-tokens'
+import { uuid7 } from '@src/utils/uuid'
 
-const STORAGE_PATH = './tc/'
+const TON_CONNECT_SESSIONS_DIR = process.env.TON_CONNECT_SESSIONS_DIR || './tc/'
 
 export async function handleTonConnectionLogin(ctx: MyContext) {
   if (!ctx.tgUser) {
@@ -17,11 +21,12 @@ export async function handleTonConnectionLogin(ctx: MyContext) {
   const tgUser = ctx.tgUser
 
   const provider = new TonConnectProvider(
-    new FSStorage(STORAGE_PATH + tgUser.id.toString()),
+    new FSStorage(TON_CONNECT_SESSIONS_DIR + tgUser.id.toString()),
   )
 
+  const payload = await ctx.capyCloudAPI.generatePayload()
   const walletConnect = await provider
-    .connectWallet()
+    .connectWallet(payload.nonce)
     .catch(async (err) => {
       const tonAddress = provider.address()
       if (!tonAddress) {
@@ -53,13 +58,13 @@ export async function handleTonConnectionLogin(ctx: MyContext) {
   })
 
   walletConnect.checker
-    .then(async () => {
+    .then(async (wallet: Wallet) => {
       const tonAddress = provider.address()
-      console.log(ctx)
       if (!tonAddress) {
         await _retryLogin(ctx)
         return
       }
+      const apiAuthTokens = await ctx.capyCloudAPI.verifyPayload(wallet)
 
       tgUser.tonAddress = tonAddress.toString()
       const queryRunner = ctx.dataSource.createQueryRunner()
@@ -70,11 +75,15 @@ export async function handleTonConnectionLogin(ctx: MyContext) {
       try {
         const uow = new TypeORMUnitOfWork(queryRunner)
         const tgUserRepo = new TgUserRepoImpl(queryRunner)
+        const authTokensRepo = new AuthTokensRepoImpl(queryRunner)
 
         await tgUserRepo.updateTgUser(tgUser)
+        
+        const authTokens = new AuthTokens(uuid7(), apiAuthTokens.accessToken, apiAuthTokens.refreshToken, tgUser.id)
+        await authTokensRepo.removeAuthTokensByTgUser(authTokens.tgUserId)
+        await authTokensRepo.addAuthTokens(authTokens)
         await uow.commit()
 
-        // TODO: add User creation via the capy cloud api client
         await ctx.reply('Login to your wallet: ' + tgUser.tonAddress)
         await ctx.reply(
           'Now you can upload your files, or send a ready-made bagID our bot will do the rest of the work.'

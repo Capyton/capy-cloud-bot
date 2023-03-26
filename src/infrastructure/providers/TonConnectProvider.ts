@@ -1,5 +1,6 @@
 import TonConnect, {
   IStorage,
+  Wallet,
   WalletInfo,
   WalletInfoRemote,
 } from '@tonconnect/sdk'
@@ -9,7 +10,7 @@ import { SendProvider } from './SendProvider'
 
 interface ConnectWallet {
   url: string
-  checker: Promise<void>
+  checker: Promise<Wallet>
 }
 
 class TonConnectStorage implements IStorage {
@@ -72,10 +73,10 @@ export class TonConnectProvider implements SendProvider {
       bridgeUrl: wallet.bridgeUrl,
     }, { tonProof: tonProof })
 
-    const checker = new Promise<void>((resolve, reject) => {
+    const checker = new Promise<Wallet>((resolve: (wallet: Wallet) => void, reject) => {
       this.#connector.onStatusChange((w) => {
         if (w) {
-          resolve()
+          resolve(w)
         } else {
           reject('Wallet is not connected')
         }
