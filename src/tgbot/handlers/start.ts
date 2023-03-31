@@ -1,51 +1,50 @@
-import MyContext from '@src/tgbot/models/Context'
-import { TgUser } from '@src/entities/tg-user'
-import { uuid7 } from '@src/utils/uuid'
-import { handleTonConnectionLogin } from './ton-connect'
+import { CommonContext } from '@src/tgbot/models/context'
 import { InlineKeyboard } from 'grammy'
+import { login } from './ton-connect'
 
-export async function handleStart(ctx: MyContext) {
-  const fromUser = ctx.from!
-  const lastName = fromUser.last_name
+export async function start(ctx: CommonContext) {
+  const message = ctx.message!
+  const user = ctx.from!
+  const lastName = user.last_name
+  const fullName = user.first_name + (lastName ? ' ' + lastName : '')
 
-  const fullName = fromUser.first_name + (lastName ? ' ' + lastName : '')
+  const markup = new InlineKeyboard().text('🛠 Settings', 'settings')
 
-  const menu = new InlineKeyboard().text('🛠 Settings', 'settings')
   await ctx.reply(
-    `Hi, ${fullName}
-Welcome to CapyCloud, a decentralized and convenient solution for communication with the Ton Storage. 
-  
-If you have any questions, feel free to write @coalus 
-  
-Good use!`,
-    { reply_markup: menu }
+    `Hi, ${fullName}!\n\n` +
+    "I'm CapyCloud bot, a decentralized and convenient solution for communication with the Ton Storage.\n\n" +
+    "If you have any questions, feel free to write @coalus\n\n" +
+    "Good use!",
+    {
+      disable_web_page_preview: true,
+      message_thread_id: message.message_thread_id,
+      reply_markup: markup,
+    },
   )
 }
 
-export async function handleUnknownUser(ctx: MyContext) {
-  const fromUser = ctx.from!
-  const tgUser = new TgUser(
-    uuid7(),
-    fromUser.id,
-    fromUser.first_name,
-    fromUser.last_name || null,
-    fromUser.username || null,
-    null,
+export async function startForUnloggedUser(ctx: CommonContext) {
+  const message = ctx.message!
+  const user = ctx.from!
+  const lastName = user.last_name
+  const fullName = user.first_name + (lastName ? ' ' + lastName : '')
+
+  await ctx.reply(
+    `Hi, ${fullName}!\n\n` +
+    "I'm CapyCloud bot, a decentralized and convenient solution for communication with the Ton Storage.\n\n" +
+    "If you have any questions, feel free to write @coalus\n\n" +
+    "Good use!",
+    {
+      disable_web_page_preview: true,
+      message_thread_id: message.message_thread_id,
+    }
   )
-  await ctx.tgUserRepo.addTgUser(tgUser)
-  await ctx.uow.commit()
 
-  ctx.tgUser = tgUser
-
-  const lastName = fromUser.last_name
-  const fullName = fromUser.first_name + (lastName ? ' ' + lastName : '')
-
-  await ctx.reply(`Hi, ${fullName}
-Welcome to CapyCloud, a decentralized and convenient solution for communication with the Ton Storage. 
-
-If you have any questions, feel free to write @coalus 
-
-Good use!`)
-  await ctx.reply('Lets login into your wallet')
-  await handleTonConnectionLogin(ctx)
+  await ctx.reply(
+    'Lets login into your wallet',
+    {
+    message_thread_id: message.message_thread_id,
+    }
+  )
+  await login(ctx)
 }

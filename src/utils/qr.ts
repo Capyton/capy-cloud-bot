@@ -1,7 +1,6 @@
 import QRCode from 'qrcode'
 
 export const generateQRCode = async (url: string) => {
-  console.log('ok')
   const qrCode = QRCode.toBuffer(url, {
     errorCorrectionLevel: 'H',
     type: 'png',
@@ -10,6 +9,6 @@ export const generateQRCode = async (url: string) => {
       light: '#fff',
     },
   })
-  console.log(qrCode)
+
   return qrCode
 }

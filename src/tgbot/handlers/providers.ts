@@ -1,40 +1,36 @@
-import MyContext from '@src/tgbot/models/Context'
-
 import { address, fromNano } from 'ton-core'
 
-export const convertBytes = function (bytes: number) {
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+import { CommonContext } from '@src/tgbot/models/context'
+import { convertBytesToString } from '@src/utils/bytes'
 
-  if (bytes == 0) {
-    return 'n/a'
-  }
-
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-
-  if (i == 0) {
-    return bytes + ' ' + sizes[i]
-  }
-
-  return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i]
-}
-
-export async function handleProvider(ctx: MyContext) {
-  const providerAddress = ctx.message?.text
-  if (!providerAddress) {
-    return
-  }
+export async function getProviderInfo(ctx: CommonContext) {
+  const message = ctx.message!
+  const providerAddress = message.text!
   const providerInfo = await ctx.capyCloudAPI.getProviderParams(providerAddress)
 
-  const textAboutProvider = `
-Provider: <code>${address(providerAddress).toString()}</code>  
+  if (!providerInfo) {
+    await ctx.reply(
+      'Can\'t get provider info. Check address you sent.',
+      {
+        allow_sending_without_reply: true,
+        message_thread_id: message.message_thread_id,
+        reply_to_message_id: message.message_id,
+      }
+    )
+    return
+  }
 
-Max file size: ${convertBytes(providerInfo.maxFileSize)}
-Min file size: ${convertBytes(providerInfo.minFileSize)}
-Accept new files: ${providerInfo.acceptNewContracts}
-Rate mb/day: ${fromNano(providerInfo.ratePerMbDay)} TON
-  `
-  const text = providerInfo
-    ? textAboutProvider
-    : 'Cant get provider info. Check address you sent.'
-  ctx.reply(text, { parse_mode: 'HTML' })
+  await ctx.reply(
+    `Provider: <code>${address(providerAddress).toString()}</code>\n\n` +
+    `Max file size: ${convertBytesToString(providerInfo.maxFileSize)}\n` +
+    `Min file size: ${convertBytesToString(providerInfo.minFileSize)}\n` +
+    `Accept new files: ${providerInfo.acceptNewContracts}\n` +
+    `Rate mb/day: ${fromNano(providerInfo.ratePerMbDay)} TON`,
+    {
+      parse_mode: 'HTML',
+      allow_sending_without_reply: true,
+      message_thread_id: message.message_thread_id,
+      reply_to_message_id: message.message_id,
+    },
+  )
 }

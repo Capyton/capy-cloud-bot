@@ -1,32 +1,29 @@
 import 'source-map-support'
+
 import * as dotenv from 'dotenv'
 
-import { run } from '@grammyjs/runner'
-import { sequentialize } from 'grammy-middlewares'
-import { conversations, createConversation } from '@grammyjs/conversations'
 import { Bot, session } from 'grammy'
-
-import MyContext from './tgbot/models/Context'
-import { handleStart, handleUnknownUser } from './tgbot/handlers/start'
 import {
   CapyCloudAPIMiddleware,
   DbMiddleware,
   loggingMiddleware,
-  loadTgUserMiddleware,
+  tgUserMiddleware,
 } from './tgbot/middlewares/'
-import { handleDocument } from './tgbot/handlers/upload'
-import { isAddress } from './tgbot/filters/is-address'
-import { handleProvider } from './tgbot/handlers/providers'
+import { conversations, createConversation } from '@grammyjs/conversations'
+import { loggedUser, unloggedUser } from './tgbot/filters/auth-user'
+import { login, logout } from './tgbot/handlers/ton-connect'
+import { media, mediaFromUnloggedUser } from './tgbot/handlers/upload'
+import { settings, settingsFromUnloggedUser } from './tgbot/handlers/settings'
+import { start, startForUnloggedUser } from './tgbot/handlers/start'
+
+import { CommonContext } from './tgbot/models/context'
 import { getDataSource } from './infrastructure/db/main'
-import { loadConfigFromEnv } from './infrastructure/config-loader'
-import { unknownUser } from './tgbot/filters/unknown-user'
-import { unloggedUser } from './tgbot/filters/unlogged-user'
-import {
-  handleTonConnectionLogin,
-  handleTonConnectionLogout,
-} from './tgbot/handlers/ton-connect'
+import { getProviderInfo } from './tgbot/handlers/providers'
 import { initCapyCloudClient } from './infrastructure/capy-cloud/main'
-import { handleSettings } from './tgbot/handlers/settings'
+import { isAddress } from './tgbot/filters/is-address'
+import { loadConfigFromEnv } from './infrastructure/config-loader'
+import { run } from '@grammyjs/runner'
+import { sequentialize } from 'grammy-middlewares'
 
 dotenv.config()
 
@@ -45,7 +42,7 @@ async function runApp() {
 
   const capyCloudClient = initCapyCloudClient(config.capyCloud)
 
-  const bot = new Bot<MyContext>(config.bot.token)
+  const bot = new Bot<CommonContext>(config.bot.token)
 
   // Middlewares
   const dbMiddleware = new DbMiddleware(dataSource)
@@ -60,32 +57,51 @@ async function runApp() {
       })
     )
     .use(conversations())
-    .use(createConversation(handleDocument))
+    .use(createConversation(media, 'media'))
     .use(sequentialize())
     .use(dbMiddleware.handle.bind(dbMiddleware))
-    .use(loadTgUserMiddleware)
+    .use(tgUserMiddleware)
     .use(capyCloudAPIMiddleware.handle.bind(capyCloudAPIMiddleware))
 
-  // Commands
-  bot.on('message').filter(unknownUser, handleUnknownUser)
-  bot.filter(unloggedUser).command(['start'], handleTonConnectionLogin)
-  bot.command(['start'], handleStart)
-  bot.command(['login'], handleTonConnectionLogin)
-  bot.command(['logout'], handleTonConnectionLogout)
+  // bot.on('message').filter(unknownUser, handleUnknownUser)
 
-  bot.callbackQuery('settings', handleSettings)
+  // Start handlers
+  bot.filter(loggedUser).command(['start'], start)
+  bot.filter(unloggedUser).command(['start'], startForUnloggedUser)
 
-  bot.on([':document', ':photo'], async (ctx) => {
-    await ctx.conversation.enter('handleDocument')
+  // Auth handlers
+  bot.command(['login'], login)
+  bot.command(['logout'], logout)
+
+  // Settings handlers
+  bot.filter(loggedUser).callbackQuery('settings', settings)
+  bot.filter(unloggedUser).callbackQuery('settings', settingsFromUnloggedUser)
+
+  // Handler for accept provider address and reply provider info
+  bot.filter(isAddress).on(':text', getProviderInfo)
+
+  bot.filter(loggedUser).on([
+    ':photo', ':animation', ':audio',
+    ':document', ':video', ':video_note',
+    ':voice', ':sticker',
+  ], async (ctx) => {
+    await ctx.conversation.enter('media')
   })
-  bot.filter(isAddress).on(':text', handleProvider)
+  bot.filter(unloggedUser).on([
+    ':photo', ':animation', ':audio',
+    ':document', ':video', ':video_note',
+    ':voice', ':sticker',
+  ], mediaFromUnloggedUser)
 
-  // Errors
-  bot.catch(console.error)
+  // Error handler
+  bot.catch((err) => {
+    console.error(`Error occured: ${err}`)
+  })
 
-  // Start bot
+  // Initialize bot
   await bot.init()
 
+  // Run bot
   run(bot)
 
   console.info(`Bot @${bot.botInfo.username} is up and running`)
