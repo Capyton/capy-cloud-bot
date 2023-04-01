@@ -23,4 +23,10 @@ export class TgContext extends Context {
   tgUser: TgUser | null
 }
 
-export type CommonContext = RepoContext & DbContext & CapyCloudContext & TgContext & ConversationFlavor
+export type CommonContext = (
+  RepoContext
+  & DbContext
+  & CapyCloudContext
+  & TgContext
+  & ConversationFlavor
+)

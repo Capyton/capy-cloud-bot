@@ -12,24 +12,7 @@ const TON_CONNECT_SESSIONS_DIR = process.env.TON_CONNECT_SESSIONS_DIR || './tc/'
 
 export async function login(ctx: CommonContext) {
   const message = ctx.message!
-  const tgUser = ctx.tgUser
-
-  if (!tgUser) {
-    console.error(
-      '\`TgUser\` not found, but it should be. ' +
-      `User: ${ JSON.stringify(message.from) }`
-    )
-
-    await ctx.reply(
-      'You\'re not registered. ',
-      {
-        allow_sending_without_reply: true,
-        message_thread_id: message.message_thread_id,
-        reply_to_message_id: message.message_id,
-      }
-    )
-    return
-  }
+  const tgUser = ctx.tgUser!
 
   const provider = new TonConnectProvider(
     new FSStorage(TON_CONNECT_SESSIONS_DIR + tgUser.id.toString()),
@@ -142,24 +125,7 @@ export async function login(ctx: CommonContext) {
 
 export async function logout(ctx: CommonContext) {
   const message = ctx.message!
-  const tgUser = ctx.tgUser
-
-  if (!tgUser) {
-    console.error(
-      '\`TgUser\` not found, but it should be. ' +
-      `User: ${JSON.stringify(message.from)}`
-    )
-
-    await ctx.reply(
-      'You\'re not logged in',
-      {
-        allow_sending_without_reply: true,
-        message_thread_id: message.message_thread_id,
-        reply_to_message_id: message.message_id,
-      }
-    )
-    return
-  }
+  const tgUser = ctx.tgUser!
 
   tgUser.tonAddress = null
   await ctx.tgUserRepo.updateTgUser(tgUser)

@@ -10,15 +10,17 @@ import {
   tgUserMiddleware,
 } from './tgbot/middlewares/'
 import { conversations, createConversation } from '@grammyjs/conversations'
+import { knownUser, unknownUser } from './tgbot/filters/unknown-user'
 import { loggedUser, unloggedUser } from './tgbot/filters/auth-user'
 import { login, logout } from './tgbot/handlers/ton-connect'
 import { media, mediaFromUnloggedUser } from './tgbot/handlers/upload'
 import { settings, settingsFromUnloggedUser } from './tgbot/handlers/settings'
-import { start, startForUnloggedUser } from './tgbot/handlers/start'
+import { start, startForUnknownUser, startForUnloggedUser } from './tgbot/handlers/start'
 
 import { CommonContext } from './tgbot/models/context'
 import { getDataSource } from './infrastructure/db/main'
 import { getProviderInfo } from './tgbot/handlers/providers'
+import { help } from './tgbot/handlers/help'
 import { initCapyCloudClient } from './infrastructure/capy-cloud/main'
 import { isAddress } from './tgbot/filters/is-address'
 import { loadConfigFromEnv } from './infrastructure/config-loader'
@@ -63,15 +65,27 @@ async function runApp() {
     .use(tgUserMiddleware)
     .use(capyCloudAPIMiddleware.handle.bind(capyCloudAPIMiddleware))
 
-  // bot.on('message').filter(unknownUser, handleUnknownUser)
+  await bot.api.setMyCommands([
+    { command: 'start', description: 'Start bot' },
+    { command: 'help', description: 'Show help' },
+    { command: 'login', description: 'Login to wallet' },
+    { command: 'logout', description: 'Logout from wallet' },
+  ])
+
+  // In some cases we don't need to use `knownUser` filter, because
+  // logged users always are known users, so we can use `loggedUser` filter instead of `knownUser` and `loggedUser`
 
   // Start handlers
+  bot.filter(unknownUser).command(['start'], startForUnknownUser)
+  bot.filter(knownUser).filter(unloggedUser).command(['start'], startForUnloggedUser)
   bot.filter(loggedUser).command(['start'], start)
-  bot.filter(unloggedUser).command(['start'], startForUnloggedUser)
+
+  // Help handlers
+  bot.command(['help'], help)
 
   // Auth handlers
-  bot.command(['login'], login)
-  bot.command(['logout'], logout)
+  bot.filter(knownUser).command(['login'], login)
+  bot.filter(knownUser).command(['logout'], logout)
 
   // Settings handlers
   bot.filter(loggedUser).callbackQuery('settings', settings)
@@ -80,6 +94,7 @@ async function runApp() {
   // Handler for accept provider address and reply provider info
   bot.filter(isAddress).on(':text', getProviderInfo)
 
+  // Handlers for upload media
   bot.filter(loggedUser).on([
     ':photo', ':animation', ':audio',
     ':document', ':video', ':video_note',
