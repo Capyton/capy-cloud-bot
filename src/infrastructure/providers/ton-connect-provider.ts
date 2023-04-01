@@ -1,14 +1,15 @@
+import { Address, Cell, StateInit, beginCell, storeStateInit } from 'ton-core'
 import TonConnect, {
   IStorage,
   Wallet,
   WalletInfo,
   WalletInfoRemote,
 } from '@tonconnect/sdk'
-import { Address, beginCell, Cell, StateInit, storeStateInit } from 'ton-core'
-import { Storage } from '@src/infrastructure/storage/Storage'
-import { SendProvider } from './SendProvider'
 
-interface ConnectWallet {
+import { SendProvider } from './send-provider'
+import { Storage } from '@src/infrastructure/storage/Storage'
+
+export interface ConnectWallet {
   url: string
   checker: Promise<Wallet>
 }
@@ -84,6 +85,10 @@ export class TonConnectProvider implements SendProvider {
     })
 
     return { url, checker }
+  }
+
+  async disconnectWallet(): Promise<void> {
+    await this.#connector.disconnect()
   }
 
   async sendTransaction(

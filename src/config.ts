@@ -1,6 +1,6 @@
+import { BotConfig } from './tgbot/config'
 import { CapyCloudAPIConfig } from './infrastructure/capy-cloud/config'
 import { DbConfig } from './infrastructure/db/config'
-import { BotConfig } from './tgbot/config'
 
 export class Config {
   constructor(

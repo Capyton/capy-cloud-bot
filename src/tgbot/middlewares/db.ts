@@ -1,5 +1,6 @@
 import { DataSource, QueryRunner } from 'typeorm'
 
+import { AuthTokensRepoImpl } from '@src/infrastructure/db/repositories/auth-tokens'
 import { CommonContext } from '@src/tgbot/models/context'
 import { NextFunction } from 'grammy'
 import { TgUserRepoImpl } from '@src/infrastructure/db/repositories/tg-user'
@@ -29,6 +30,7 @@ export class DbMiddleware {
 
     // TODO: Move this to a separate middleware or something like that?
     ctx.tgUserRepo = new TgUserRepoImpl(queryRunner)
+    ctx.authTokensRepo = new AuthTokensRepoImpl(queryRunner)
 
     await next().finally(() => {
       console.log('Release transaction')

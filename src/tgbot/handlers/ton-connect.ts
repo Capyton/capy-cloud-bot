@@ -1,10 +1,11 @@
 import { InlineKeyboard, InputFile } from 'grammy'
+import { WalletAlreadyConnectedError, WalletNotConnectedError } from '@tonconnect/sdk'
 
 import { AuthTokens } from '@src/entities/auth-tokens'
-import { AuthTokensRepoImpl } from '@src/infrastructure/db/repositories/auth-tokens'
 import { CommonContext } from '@src/tgbot/models/context'
 import { FSStorage } from '@src/infrastructure/storage/FSStorage'
-import { TonConnectProvider } from '@src/infrastructure/providers/TonConnectProvider'
+import { TonConnectProvider } from '@src/infrastructure/providers/ton-connect-provider'
+import { WalletController } from '@src/controllers/wallet'
 import { generateQRCode } from '@src/utils/qr'
 import { uuid7 } from '@src/utils/uuid'
 
@@ -13,126 +14,188 @@ const TON_CONNECT_SESSIONS_DIR = process.env.TON_CONNECT_SESSIONS_DIR || './tc/'
 export async function login(ctx: CommonContext) {
   const message = ctx.message!
   const tgUser = ctx.tgUser!
+  const tgUserId = tgUser.id
+  const userSessionPath = TON_CONNECT_SESSIONS_DIR + tgUserId
 
-  const provider = new TonConnectProvider(
-    new FSStorage(TON_CONNECT_SESSIONS_DIR + tgUser.id.toString()),
-  )
+  const provider = new TonConnectProvider(new FSStorage(userSessionPath))
+  const walletController = new WalletController(provider)
 
-  const payload = await ctx.capyCloudAPI.generatePayload()
-  const walletConnect = await provider
-    .connectWallet(payload.nonce)
-    .catch(async (err) => {
-      const tonAddress = provider.address()
-      if (!tonAddress) {
-        throw err
+  const payload = await ctx.capyCloudAPI.generatePayload().catch((err: any) => {
+    console.error(`Error while generating payload: ${err}`)
+
+    ctx.reply(
+      'Something went wrong. Please try again later.',
+      {
+        message_thread_id: message.message_thread_id,
       }
-      tgUser.tonAddress = tonAddress.toString()
-      await ctx.tgUserRepo.updateTgUser(tgUser)
-      await ctx.uow.commit()
+    )
+  }).then((payload) => (payload || null))
+  if (!payload) return
 
-      await ctx.reply(
-        `Login to your wallet: ${tgUser.tonAddress}`,
-        {
-          allow_sending_without_reply: true,
-          message_thread_id: message.message_thread_id,
-          reply_to_message_id: message.message_id,
-        }
-      )
-      await ctx.reply(
-        'Now you can upload your files, ' +
-        'or send a ready - made bagID our bot will do the rest of the work',
-        {
-          message_thread_id: message.message_thread_id,
-        }
-      )
-    })
-  if (!walletConnect) {
-    return
-  }
+  try {
+    // Try to connect to wallet, if it's already connected, throw an error
+    const walletConnect = await walletController.connect(payload)
 
-  await generateQRCode(walletConnect.url)
-    .then(async (data) => {
-        await ctx.replyWithPhoto(new InputFile
-          (data), {
-          caption: 'Scan this QR code:',
-          message_thread_id: message.message_thread_id,
-          reply_markup: new InlineKeyboard()
-            .url('Login via tonkeeper', walletConnect.url),
-        })
+    // Generate QR code to login to wallet
+    const buffer = await generateQRCode(walletConnect.url)
+
+    // Send QR code to user
+    const qrCodeMessage = await ctx.replyWithPhoto(new InputFile(buffer), {
+      caption: 'Scan this QR code:',
+      message_thread_id: message.message_thread_id,
+      reply_markup: new InlineKeyboard()
+        .url('Login via tonkeeper', walletConnect.url),
     })
 
-  walletConnect.checker.then(async (wallet) => {
-    const tonAddress = provider.address()
 
-    if (!tonAddress) {
-      console.error(`Address is not found in wallet: ${JSON.stringify(wallet)}`)
+    // No await here
+    walletController
+      .checkWalletAndAddress(walletConnect)
+      .then(async ({ wallet, address }) => {
+        console.log(
+          `User ${tgUserId} connected to wallet: ${address}`
+        )
+
+        // Generate auth tokens for user and verify wallet proof
+        const apiAuthTokens = await ctx.capyCloudAPI.verifyPayload(wallet)
+        const authTokens = new AuthTokens(
+          uuid7(),
+          apiAuthTokens.accessToken,
+          apiAuthTokens.refreshToken,
+          tgUserId,
+        )
+
+        // Save user's address to database
+        tgUser.tonAddress = address
+        await ctx.tgUserRepo.updateTgUser(tgUser)
+
+        // Remove old auth tokens from database, if they exist
+        await ctx.authTokensRepo.removeAuthTokensByTgUser(tgUserId)
+        // Save auth tokens to database
+        await ctx.authTokensRepo.addAuthTokens(authTokens)
+
+        await ctx.uow.commit()
+
+        await ctx.reply(
+          `You're connected to wallet: <code>${address}</code>`,
+          {
+            parse_mode: 'HTML',
+            allow_sending_without_reply: true,
+            message_thread_id: qrCodeMessage.message_thread_id,
+            reply_to_message_id: qrCodeMessage.message_id,
+          }
+        )
+
+        await ctx.reply(
+          'Now you can upload your files, ' +
+          'or send a ready - made bagID our bot will do the rest of the work',
+          {
+            message_thread_id: message.message_thread_id,
+          }
+        )
+      })
+      .catch(async (err: any) => {
+        console.error(`Can't login to wallet for user ${tgUserId}: ${err}`)
+
+        // Disconnect from wallet, because we no need save session with failed login
+        await walletController.disconnect()
+
+        await ctx.reply(
+          'Can\'t login to your wallet. Try to login again',
+          {
+            allow_sending_without_reply: true,
+            message_thread_id: qrCodeMessage.message_thread_id,
+            reply_to_message_id: qrCodeMessage.message_id,
+          }
+        )
+      })
+  } catch (err: any) {
+    if (err instanceof WalletAlreadyConnectedError) {
+      const address = walletController.getAddress()
 
       await ctx.reply(
-        'Can\'t login to your wallet. Try to login again',
+        `You're already connected to wallet: <code>${address}</code>.\n\n` +
+        'If you want to connect to another wallet, ' +
+        'please disconnect from the current one first.',
         {
+          parse_mode: 'HTML',
           allow_sending_without_reply: true,
           message_thread_id: message.message_thread_id,
           reply_to_message_id: message.message_id,
         }
       )
       return
+    } else {
+      throw err
     }
-
-    tgUser.tonAddress = tonAddress.toString()
-    await ctx.tgUserRepo.updateTgUser(tgUser)
-
-    const apiAuthTokens = await ctx.capyCloudAPI.verifyPayload(wallet)
-    const authTokensRepo = new AuthTokensRepoImpl(ctx.queryRunner)
-    const authTokens = new AuthTokens(
-      uuid7(),
-      apiAuthTokens.accessToken,
-      apiAuthTokens.refreshToken,
-      tgUser.id
-    )
-
-    await authTokensRepo.removeAuthTokensByTgUser(authTokens.tgUserId)
-    await authTokensRepo.addAuthTokens(authTokens)
-    await ctx.uow.commit()
-
-    await ctx.reply(
-      `Login to your wallet: ${tgUser.tonAddress}`,
-      {
-        allow_sending_without_reply: true,
-        message_thread_id: message.message_thread_id,
-        reply_to_message_id: message.message_id,
-      }
-    )
-    await ctx.reply(
-      'Now you can upload your files, ' +
-      'or send a ready - made bagID our bot will do the rest of the work',
-      {
-        message_thread_id: message.message_thread_id,
-      }
-    )
-  }).catch(async (err) => {
-    console.log(`Error while login to ton wallet: ${err}`)
-
-    await ctx.reply(
-      'Can\'t login to your wallet. Try to login again',
-      {
-        allow_sending_without_reply: true,
-        message_thread_id: message.message_thread_id,
-        reply_to_message_id: message.message_id,
-      }
-    )
-  })
+  }
 }
 
 export async function logout(ctx: CommonContext) {
   const message = ctx.message!
   const tgUser = ctx.tgUser!
+  const tonAddress = tgUser.tonAddress
+  const tgUserId = tgUser.id
+  const userSessionPath = TON_CONNECT_SESSIONS_DIR + tgUserId.toString()
 
+  const provider = new TonConnectProvider(new FSStorage(userSessionPath))
+  const walletController = new WalletController(provider)
+
+  try {
+    // Disconnect from wallet and remove session
+    await walletController.disconnect()
+  } catch (err: any) {
+    if (err instanceof WalletNotConnectedError) {
+      if (!tonAddress) {
+        await ctx.reply(
+          'You\'re not connected to wallet',
+          {
+            allow_sending_without_reply: true,
+            message_thread_id: message.message_thread_id,
+            reply_to_message_id: message.message_id,
+          }
+        )
+        return
+      }
+
+      console.error(
+        `Can't disconnect from wallet for user ${tgUserId}: ${err}, ` +
+        `but user is connected to wallet: ${tonAddress}`,
+      )
+    } else {
+      console.error(`Can't disconnect from wallet for user ${tgUserId}, unknown error: ${err}`)
+    }
+  }
+
+  // Remove user's address from database
   tgUser.tonAddress = null
   await ctx.tgUserRepo.updateTgUser(tgUser)
+
+  // Remove auth tokens from database
+  await ctx.authTokensRepo.removeAuthTokensByTgUser(tgUserId)
+
   await ctx.uow.commit()
 
+  if (tonAddress) {
+    await ctx.reply(
+      `You're disconnected from wallet: <code>${tonAddress}</code>`,
+      {
+        parse_mode: 'HTML',
+        allow_sending_without_reply: true,
+        message_thread_id: message.message_thread_id,
+        reply_to_message_id: message.message_id,
+      }
+    )
+    return
+  }
+
+  console.error(
+    'User disconnected from wallet, ' +
+    `but he hasn't address in database: ${tgUserId}`,
+  )
+
   await ctx.reply(
-    'Logout from your wallet',
+    `You're disconnected from wallet`,
     {
       allow_sending_without_reply: true,
       message_thread_id: message.message_thread_id,

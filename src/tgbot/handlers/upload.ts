@@ -3,7 +3,7 @@ import { InlineKeyboard, InputFile, Keyboard } from 'grammy'
 import {CommonContext} from '@src/tgbot/models/context'
 import { FSStorage } from '@src/infrastructure/storage/FSStorage'
 import MyConversation from '@src/tgbot/models/conversation'
-import { TonConnectProvider } from '@src/infrastructure/providers/TonConnectProvider'
+import { TonConnectProvider } from '@src/infrastructure/providers/ton-connect-provider'
 import { convertBytesToString } from '@src/utils/bytes'
 import { generateQRCode } from '@src/utils/qr'
 

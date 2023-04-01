@@ -1,3 +1,4 @@
+import { AuthTokensRepoImpl } from '@src/infrastructure/db/repositories/auth-tokens'
 import CapyCloudAPI from '@src/infrastructure/capy-cloud/client'
 import { Context } from 'grammy'
 import { ConversationFlavor } from '@grammyjs/conversations'
@@ -8,6 +9,7 @@ import { TypeORMUnitOfWork } from '@src/infrastructure/db/uow'
 
 export class RepoContext extends Context {
   tgUserRepo: TgUserRepoImpl
+  authTokensRepo: AuthTokensRepoImpl
 }
 
 export class DbContext extends Context {

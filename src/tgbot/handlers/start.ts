@@ -34,14 +34,17 @@ export async function startForUnknownUser(ctx: CommonContext) {
   // Referral string from the link, for example: https://t.me/capycloud_bot?start=1234567, where 1234567 is referral
   const referral = ctx.match
 
-  await ctx.tgUserRepo.addTgUser(new TgUser(
+  const tgUser = new TgUser(
     uuid7(),
     user.id,
     user.first_name,
     user.last_name || null,
     user.username || null,
     null,
-  ))
+  )
+  ctx.tgUser = tgUser
+
+  await ctx.tgUserRepo.addTgUser(tgUser)
   await ctx.uow.commit()
 
   await ctx.reply(
@@ -61,6 +64,8 @@ export async function startForUnknownUser(ctx: CommonContext) {
     message_thread_id: message.message_thread_id,
     }
   )
+
+  // Start login user via wallet by TonConnect 2.0 protocol
   await login(ctx)
 }
 
@@ -87,5 +92,7 @@ export async function startForUnloggedUser(ctx: CommonContext) {
     message_thread_id: message.message_thread_id,
     }
   )
+
+  // Start login user via wallet by TonConnect 2.0 protocol
   await login(ctx)
 }
