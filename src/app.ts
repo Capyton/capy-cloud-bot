@@ -60,7 +60,6 @@ async function runApp() {
     )
     .use(conversations())
     .use(createConversation(media, 'media'))
-    .use(sequentialize())
     .use(dbMiddleware.handle.bind(dbMiddleware))
     .use(tgUserMiddleware)
     .use(capyCloudAPIMiddleware.handle.bind(capyCloudAPIMiddleware))

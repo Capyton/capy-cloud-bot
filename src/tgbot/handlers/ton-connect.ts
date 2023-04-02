@@ -47,8 +47,6 @@ export async function login(ctx: CommonContext) {
         .url('Login via tonkeeper', walletConnect.url),
     })
 
-
-    // Await here
     await walletController
       .checkWalletAndAddress(walletConnect)
       .then(async ({ wallet, address }) => {
