@@ -1,7 +1,7 @@
-import { ConnectWallet, TonConnectProvider } from "@src/infrastructure/providers/ton-connect-provider"
-import { Wallet, WalletAlreadyConnectedError } from "@tonconnect/sdk"
+import { ConnectWallet, TonConnectProvider } from '@src/infrastructure/providers/ton-connect-provider'
+import { Wallet, WalletAlreadyConnectedError } from '@tonconnect/sdk'
 
-import { AuthPayload } from "@src/infrastructure/capy-cloud/schemas/api"
+import { AuthPayload } from '@src/infrastructure/capy-cloud/schemas/api'
 
 export class WalletController {
     constructor(
@@ -11,7 +11,7 @@ export class WalletController {
     getAddress(): string {
         const address = this.provider.address()
 
-        if (!address) throw new Error("Wallet isn't connected")
+        if (!address) throw new Error('Wallet isn\'t connected')
 
         return address.toString()
     }
@@ -20,15 +20,19 @@ export class WalletController {
         return wallet.account.address.toString()
     }
 
-    async connect(authPayload: AuthPayload): Promise<ConnectWallet> {
-        return await this.provider.connectWallet(authPayload.nonce)
+    connect(authPayload: AuthPayload): Promise<ConnectWallet> {
+        return this.provider.connectWallet(authPayload.nonce)
     }
 
-    async disconnect(): Promise<void> {
-        await this.provider.disconnectWallet()
+    disconnect(): Promise<void> {
+        return this.provider.disconnectWallet()
     }
 
-    async checkWalletAndAddress(wallet: ConnectWallet): Promise<{
+    removeSession(): Promise<void> {
+        return this.provider.removeSession()
+    }
+
+    checkWalletAndAddress(wallet: ConnectWallet): Promise<{
         wallet: Wallet,
         address: string,
     }> {

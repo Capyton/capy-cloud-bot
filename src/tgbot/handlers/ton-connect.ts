@@ -3,7 +3,7 @@ import { WalletAlreadyConnectedError, WalletNotConnectedError } from '@tonconnec
 
 import { AuthTokens } from '@src/entities/auth-tokens'
 import { CommonContext } from '@src/tgbot/models/context'
-import { FSStorage } from '@src/infrastructure/storage/FSStorage'
+import { FSStorage } from '@src/infrastructure/storage/fs-storage'
 import { TonConnectProvider } from '@src/infrastructure/providers/ton-connect-provider'
 import { WalletController } from '@src/controllers/wallet'
 import { generateQRCode } from '@src/utils/qr'
@@ -20,10 +20,10 @@ export async function login(ctx: CommonContext) {
   const provider = new TonConnectProvider(new FSStorage(userSessionPath))
   const walletController = new WalletController(provider)
 
-  const payload = await ctx.capyCloudAPI.generatePayload().catch((err: any) => {
+  const payload = await ctx.capyCloudAPI.generatePayload().catch(async (err: any) => {
     console.error(`Error while generating payload: ${err}`)
 
-    ctx.reply(
+    await ctx.reply(
       'Something went wrong. Please try again later.',
       {
         message_thread_id: message.message_thread_id,
@@ -140,7 +140,7 @@ export async function logout(ctx: CommonContext) {
   const walletController = new WalletController(provider)
 
   try {
-    // Disconnect from wallet and remove session
+    // Disconnect from wallet and remove session, if it's connected
     await walletController.disconnect()
   } catch (err: any) {
     if (err instanceof WalletNotConnectedError) {
@@ -158,15 +158,26 @@ export async function logout(ctx: CommonContext) {
 
       console.error(
         `Can't disconnect from wallet for user ${tgUserId}: ${err}, ` +
-        `but user is connected to wallet: ${tonAddress}`,
+        `but user have TON address: ${tonAddress}`,
       )
     } else {
-      console.error(`Can't disconnect from wallet for user ${tgUserId}, unknown error: ${err}`)
+      console.error(
+        `Can't disconnect from wallet for user ${tgUserId}: ${err} (unknown error), ` +
+        `but user have TON address: ${tonAddress}`,
+      )
     }
   }
 
+  // Remove session from file system
+  walletController.removeSession().catch((err: any) => {
+    console.error(
+      `Can't remove session for user ${tgUserId}: ${err}`,
+    )
+  })
+
   // Remove user's address from database
   tgUser.tonAddress = null
+  ctx.tgUser = tgUser
   await ctx.tgUserRepo.updateTgUser(tgUser)
 
   // Remove auth tokens from database
@@ -193,7 +204,7 @@ export async function logout(ctx: CommonContext) {
   )
 
   await ctx.reply(
-    `You're disconnected from wallet`,
+    'You\'re disconnected from wallet',
     {
       allow_sending_without_reply: true,
       message_thread_id: message.message_thread_id,

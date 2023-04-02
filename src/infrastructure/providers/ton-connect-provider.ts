@@ -7,7 +7,9 @@ import TonConnect, {
 } from '@tonconnect/sdk'
 
 import { SendProvider } from './send-provider'
-import { Storage } from '@src/infrastructure/storage/Storage'
+import { Storage } from '@src/infrastructure/storage'
+
+export const TRANSACTION_TIMEOUT = 5 * 60 * 1000
 
 export interface ConnectWallet {
   url: string
@@ -15,20 +17,18 @@ export interface ConnectWallet {
 }
 
 class TonConnectStorage implements IStorage {
-  #inner: Storage
-
-  constructor(inner: Storage) {
-    this.#inner = inner
-  }
+  constructor(
+    public readonly inner: Storage,
+  ) { }
 
   async setItem(key: string, value: string): Promise<void> {
-    return await this.#inner.setItem(key, value)
+    return await this.inner.setItem(key, value)
   }
   async getItem(key: string): Promise<string | null> {
-    return await this.#inner.getItem(key)
+    return await this.inner.getItem(key)
   }
   async removeItem(key: string): Promise<void> {
-    return await this.#inner.removeItem(key)
+    return await this.inner.removeItem(key)
   }
 }
 
@@ -37,49 +37,51 @@ function isRemote(walletInfo: WalletInfo): walletInfo is WalletInfoRemote {
 }
 
 export class TonConnectProvider implements SendProvider {
-  #connector: TonConnect
+  public readonly connector: TonConnect
 
-  constructor(storage: Storage) {
-    this.#connector = new TonConnect({
+  constructor(
+    public readonly storage: Storage,
+  ) {
+    this.connector = new TonConnect({
       storage: new TonConnectStorage(storage),
       manifestUrl: 'https://jsonblob.com/api/jsonBlob/1086334593673740288',
     })
   }
 
-  async connect(): Promise<void> {
-    await this.connectWallet()
-
-    console.log(
-      `Connected to wallet at address: ${Address.parse(
-        this.#connector.wallet!.account.address
-      ).toString()}\n`
-    )
+  connect(): Promise<void> {
+    return this.connectWallet().then(() => {
+      console.log(
+        `Connected to wallet at address: ${Address.parse(
+          this.connector.wallet!.account.address
+        ).toString()}\n`
+      )
+    })
   }
 
   address(): Address | undefined {
-    if (!this.#connector.wallet) return undefined
+    if (!this.connector.wallet) return undefined
 
-    return Address.parse(this.#connector.wallet.account.address)
+    return Address.parse(this.connector.wallet.account.address)
   }
 
   async connectWallet(tonProof?: string): Promise<ConnectWallet> {
-    const wallets = (await this.#connector.getWallets()).filter(isRemote)
+    const wallets = (await this.connector.getWallets()).filter(isRemote)
 
-    await this.#connector.restoreConnection()
+    await this.connector.restoreConnection()
 
     const wallet = wallets[0]
 
-    const url = this.#connector.connect({
+    const url = this.connector.connect({
       universalLink: wallet.universalLink,
       bridgeUrl: wallet.bridgeUrl,
     }, { tonProof: tonProof })
 
     const checker = new Promise<Wallet>((resolve: (wallet: Wallet) => void, reject) => {
-      this.#connector.onStatusChange((w) => {
+      this.connector.onStatusChange((w) => {
         if (w) {
           resolve(w)
         } else {
-          reject('Wallet is not connected')
+          reject('Wallet isn\'t connected')
         }
       }, reject)
     })
@@ -87,18 +89,22 @@ export class TonConnectProvider implements SendProvider {
     return { url, checker }
   }
 
-  async disconnectWallet(): Promise<void> {
-    await this.#connector.disconnect()
+  disconnectWallet(): Promise<void> {
+    return this.connector.disconnect()
   }
 
-  async sendTransaction(
+  removeSession(): Promise<void> {
+    return this.storage.removeSession()
+  }
+
+  sendTransaction(
     address: Address,
     amount: bigint,
     payload?: Cell,
     stateInit?: StateInit
   ): Promise<void> {
-    await this.#connector.sendTransaction({
-      validUntil: Date.now() + 5 * 60 * 1000,
+    return this.connector.sendTransaction({
+      validUntil: Date.now() + TRANSACTION_TIMEOUT,
       messages: [
         {
           address: address.toString(),
@@ -113,6 +119,6 @@ export class TonConnectProvider implements SendProvider {
             : undefined,
         },
       ],
-    })
+    }).then(() => {})
   }
 }

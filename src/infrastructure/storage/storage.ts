@@ -15,4 +15,9 @@ export interface Storage {
    * @param key key to access the value.
    */
   removeItem(key: string): Promise<void>
+
+  /**
+   * Removes the session from. Implementation may use backend as a storage due to the fact that the function returns a promise.
+   */
+  removeSession(): Promise<void>
 }
