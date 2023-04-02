@@ -1,10 +1,11 @@
-import { DataSource } from "typeorm"
-import { DbConfig } from "./config"
-import { AuthTokens, TgUser } from "./models"
+import { AuthTokens, TgUser } from './models'
+
+import { DataSource } from 'typeorm'
+import { DbConfig } from './config'
 
 export function getDataSource(config: DbConfig): DataSource {
   const dataSource = new DataSource({
-      type: "postgres",
+      type: 'postgres',
       host: config.host,
       port: config.port,
       username: config.user,

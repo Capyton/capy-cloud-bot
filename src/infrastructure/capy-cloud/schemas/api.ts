@@ -73,7 +73,7 @@ export interface AuthTokens {
 export interface Proof {
   payloadNonce: string
   address: string
-  network: "-3" | "-239"
+  network: '-3' | '-239'
   signature: string
   timestamp: number
   domainLengthBytes: number

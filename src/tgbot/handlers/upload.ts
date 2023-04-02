@@ -1,7 +1,7 @@
 import { InlineKeyboard, InputFile, Keyboard } from 'grammy'
 
 import {CommonContext} from '@src/tgbot/models/context'
-import { FSStorage } from '@src/infrastructure/storage/FSStorage'
+import { FSStorage } from '@src/infrastructure/storage/fs-storage'
 import MyConversation from '@src/tgbot/models/conversation'
 import { TonConnectProvider } from '@src/infrastructure/providers/ton-connect-provider'
 import { convertBytesToString } from '@src/utils/bytes'

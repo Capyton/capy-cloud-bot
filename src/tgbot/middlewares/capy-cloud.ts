@@ -7,9 +7,9 @@ export class CapyCloudAPIMiddleware {
     private readonly capyCloudAPI: CapyCloudAPI,
   ) { }
 
-  async handle(ctx: CommonContext, next: NextFunction) {
+  handle(ctx: CommonContext, next: NextFunction) {
     ctx.capyCloudAPI = this.capyCloudAPI
 
-    await next()
+    return next()
   }
 }

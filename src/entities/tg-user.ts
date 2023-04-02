@@ -1,4 +1,4 @@
-import { UUID } from "@src/utils/uuid"
+import { UUID } from '@src/utils/uuid'
 
 export class TgUser {
     constructor(

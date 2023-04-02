@@ -14,9 +14,9 @@ export async function start(ctx: CommonContext) {
 
   await ctx.reply(
     `Hi, ${fullName}!\n\n` +
-    "I'm CapyCloud bot, a decentralized and convenient solution for communication with the Ton Storage.\n\n" +
-    "If you have any questions, feel free to write @coalus\n\n" +
-    "Good use!",
+    'I\'m CapyCloud bot, a decentralized and convenient solution for communication with the Ton Storage.\n\n' +
+    'If you have any questions, feel free to write @coalus\n\n' +
+    'Good use!',
     {
       disable_web_page_preview: true,
       message_thread_id: message.message_thread_id,
@@ -49,9 +49,9 @@ export async function startForUnknownUser(ctx: CommonContext) {
 
   await ctx.reply(
     `Hi, ${fullName}!\n\n` +
-    "I'm CapyCloud bot, a decentralized and convenient solution for communication with the Ton Storage.\n\n" +
-    "If you have any questions, feel free to write @coalus\n\n" +
-    "Good use!",
+    'I\'m CapyCloud bot, a decentralized and convenient solution for communication with the Ton Storage.\n\n' +
+    'If you have any questions, feel free to write @coalus\n\n' +
+    'Good use!',
     {
       disable_web_page_preview: true,
       message_thread_id: message.message_thread_id,
@@ -77,9 +77,9 @@ export async function startForUnloggedUser(ctx: CommonContext) {
 
   await ctx.reply(
     `Hi, ${fullName}!\n\n` +
-    "I'm CapyCloud bot, a decentralized and convenient solution for communication with the Ton Storage.\n\n" +
-    "If you have any questions, feel free to write @coalus\n\n" +
-    "Good use!",
+    'I\'m CapyCloud bot, a decentralized and convenient solution for communication with the Ton Storage.\n\n' +
+    'If you have any questions, feel free to write @coalus\n\n' +
+    'Good use!',
     {
       disable_web_page_preview: true,
       message_thread_id: message.message_thread_id,

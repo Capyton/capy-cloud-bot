@@ -2,8 +2,8 @@ import { CommonContext } from '@src/tgbot/models/context'
 import { address } from 'ton-core'
 
 export async function settings(ctx: CommonContext) {
-  let callbackQuery = ctx.callbackQuery!
-  let message = callbackQuery.message
+  const callbackQuery = ctx.callbackQuery!
+  const message = callbackQuery.message
 
   await ctx.reply(
     '🛠 Settings\n\n' +
@@ -12,7 +12,7 @@ export async function settings(ctx: CommonContext) {
     {
       parse_mode: 'HTML',
       message_thread_id: message?.message_thread_id,
-    }
+    },
   )
 }
 

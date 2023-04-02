@@ -25,7 +25,6 @@ import { initCapyCloudClient } from './infrastructure/capy-cloud/main'
 import { isAddress } from './tgbot/filters/is-address'
 import { loadConfigFromEnv } from './infrastructure/config-loader'
 import { run } from '@grammyjs/runner'
-import { sequentialize } from 'grammy-middlewares'
 
 dotenv.config()
 

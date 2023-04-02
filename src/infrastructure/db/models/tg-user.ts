@@ -1,9 +1,7 @@
-/* eslint-disable indent */
-
 import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm'
 
-import { UUID } from '@src/utils/uuid'
 import { AuthTokens } from './auth-tokens'
+import { UUID } from '@src/utils/uuid'
 
 @Entity({ name: 'tg_users' })
 export class TgUser {

@@ -1,4 +1,4 @@
-import { uuidv7 } from "@kripod/uuidv7"
+import { uuidv7 } from '@kripod/uuidv7'
 
 export type UUID = string
 
