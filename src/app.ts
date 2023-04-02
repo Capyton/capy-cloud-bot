@@ -8,7 +8,7 @@ import {
   DbMiddleware,
   loggingMiddleware,
   tgUserMiddleware,
-} from './tgbot/middlewares/'
+} from './tgbot/middlewares'
 import { conversations, createConversation } from '@grammyjs/conversations'
 import { knownUser, unknownUser } from './tgbot/filters/unknown-user'
 import { loggedUser, unloggedUser } from './tgbot/filters/auth-user'

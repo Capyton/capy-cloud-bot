@@ -48,8 +48,8 @@ export async function login(ctx: CommonContext) {
     })
 
 
-    // No await here
-    walletController
+    // Await here
+    await walletController
       .checkWalletAndAddress(walletConnect)
       .then(async ({ wallet, address }) => {
         console.log(
