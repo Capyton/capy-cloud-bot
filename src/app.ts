@@ -10,13 +10,18 @@ import {
   tgUserMiddleware,
 } from './tgbot/middlewares'
 import { conversations, createConversation } from '@grammyjs/conversations'
-import { getProviderParams, getProviders, setProviderCallback } from './tgbot/handlers/providers'
+import {
+  getProviderParams,
+  getProviderParamsForUnknownUser,
+  getProviders,
+  setProviderCallback,
+} from './tgbot/handlers/providers'
 import { isAddress, isAddressCallback } from './tgbot/filters/is-address'
 import { knownUser, unknownUser } from './tgbot/filters/unknown-user'
 import { loggedUser, unloggedUser } from './tgbot/filters/auth-user'
 import { login, logout } from './tgbot/handlers/ton-connect'
 import { media, mediaFromUnloggedUser } from './tgbot/handlers/upload'
-import { settings, settingsFromUnloggedUser } from './tgbot/handlers/settings'
+import { settings, settingsFromUnknownUser } from './tgbot/handlers/settings'
 import { start, startForUnknownUser, startForUnloggedUser } from './tgbot/handlers/start'
 
 import { CommonContext } from './tgbot/models/context'
@@ -91,15 +96,16 @@ async function runApp() {
   bot.filter(knownUser).command(['logout'], logout)
 
   // Settings handlers
-  bot.filter(loggedUser).callbackQuery('settings', settings)
-  bot.filter(unloggedUser).callbackQuery('settings', settingsFromUnloggedUser)
+  bot.filter(knownUser).callbackQuery('settings', settings)
+  bot.filter(knownUser).callbackQuery('settings', settingsFromUnknownUser)
 
   // Providers handlers
   bot.command(['providers'], getProviders)
-  bot.filter(isAddress).on(':text', getProviderParams)
-  bot.filter(isAddressCallback).on('callback_query', setProviderCallback)
+  bot.filter(unknownUser).filter(isAddress).on(':text', getProviderParamsForUnknownUser)
+  bot.filter(knownUser).filter(isAddress).on(':text', getProviderParams)
+  bot.filter(knownUser).filter(isAddressCallback).on('callback_query', setProviderCallback)
 
-  // Handlers for upload media
+  // Upload media handlers
   bot.filter(loggedUser).on([
     ':photo', ':animation', ':audio',
     ':document', ':video', ':video_note',

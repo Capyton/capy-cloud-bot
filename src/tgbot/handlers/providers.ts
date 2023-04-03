@@ -78,6 +78,43 @@ export async function getProviderParams(ctx: CommonContext) {
 }
 
 /**
+ * Get provider params by address for unknown user
+ */
+export async function getProviderParamsForUnknownUser(ctx: CommonContext) {
+  const message = ctx.message!
+  const providerAddress = message.text!
+
+  try {
+    const providerParams = await ctx.capyCloudAPI.getProviderParams(providerAddress)
+
+    await ctx.reply(
+      `Provider: <code>${address(providerAddress).toString()}</code>\n\n` +
+      `Max file size: ${convertBytesToString(providerParams.maxFileSize)}\n` +
+      `Min file size: ${convertBytesToString(providerParams.minFileSize)}\n` +
+      `Accept new files: ${providerParams.acceptNewContracts}\n` +
+      `Rate mb/day: ${fromNano(providerParams.ratePerMbDay)} TON`,
+      {
+        parse_mode: 'HTML',
+        allow_sending_without_reply: true,
+        message_thread_id: message.message_thread_id,
+        reply_to_message_id: message.message_id,
+      }
+    )
+  } catch (err) {
+    console.log(`Error while getting provider params: ${err}`)
+
+    await ctx.reply(
+      'Can\'t get provider params. Try again later.',
+      {
+        allow_sending_without_reply: true,
+        message_thread_id: message.message_thread_id,
+        reply_to_message_id: message.message_id,
+      }
+    )
+  }
+}
+
+/**
  * Set provider as current
  */
 export async function setProviderCallback(ctx: CommonContext) {

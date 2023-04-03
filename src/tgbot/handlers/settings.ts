@@ -20,9 +20,9 @@ export async function settings(ctx: CommonContext) {
 }
 
 /**
- * Get settings for unlogged user
+ * Get settings for unknown user
  */
-export async function settingsFromUnloggedUser(ctx: CommonContext) {
+export async function settingsFromUnknownUser(ctx: CommonContext) {
   await ctx.answerCallbackQuery(
     'You\'re not logged in. Please, login to your wallet to get and change settings.',
   )
