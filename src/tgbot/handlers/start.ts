@@ -8,9 +8,7 @@ export async function start(ctx: CommonContext) {
   const message = ctx.message!
   const user = ctx.from!
   const lastName = user.last_name
-  const fullName = user.first_name + (lastName ? ' ' + lastName : '')
-
-  const markup = new InlineKeyboard().text('🛠 Settings', 'settings')
+  const fullName = lastName ? `${user.first_name} ${lastName}` : user.first_name
 
   await ctx.reply(
     `Hi, ${fullName}!\n\n` +
@@ -20,7 +18,8 @@ export async function start(ctx: CommonContext) {
     {
       disable_web_page_preview: true,
       message_thread_id: message.message_thread_id,
-      reply_markup: markup,
+      reply_markup: new InlineKeyboard()
+        .text('🛠 Settings', 'settings'),
     },
   )
 }
@@ -29,7 +28,7 @@ export async function startForUnknownUser(ctx: CommonContext) {
   const message = ctx.message!
   const user = ctx.from!
   const lastName = user.last_name
-  const fullName = user.first_name + (lastName ? ' ' + lastName : '')
+  const fullName = lastName ? `${user.first_name} ${lastName}` : user.first_name
 
   // Referral string from the link, for example: https://t.me/capycloud_bot?start=1234567, where 1234567 is referral
   const referral = ctx.match
@@ -73,7 +72,7 @@ export async function startForUnloggedUser(ctx: CommonContext) {
   const message = ctx.message!
   const user = ctx.from!
   const lastName = user.last_name
-  const fullName = user.first_name + (lastName ? ' ' + lastName : '')
+  const fullName = lastName ? `${user.first_name} ${lastName}` : user.first_name
 
   await ctx.reply(
     `Hi, ${fullName}!\n\n` +

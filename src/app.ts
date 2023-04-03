@@ -10,6 +10,8 @@ import {
   tgUserMiddleware,
 } from './tgbot/middlewares'
 import { conversations, createConversation } from '@grammyjs/conversations'
+import { getProviderParams, getProviders, setProviderCallback } from './tgbot/handlers/providers'
+import { isAddress, isAddressCallback } from './tgbot/filters/is-address'
 import { knownUser, unknownUser } from './tgbot/filters/unknown-user'
 import { loggedUser, unloggedUser } from './tgbot/filters/auth-user'
 import { login, logout } from './tgbot/handlers/ton-connect'
@@ -19,10 +21,9 @@ import { start, startForUnknownUser, startForUnloggedUser } from './tgbot/handle
 
 import { CommonContext } from './tgbot/models/context'
 import { getDataSource } from './infrastructure/db/main'
-import { getProviderInfo } from './tgbot/handlers/providers'
 import { help } from './tgbot/handlers/help'
+// import { hydrateFiles } from '@grammyjs/files'
 import { initCapyCloudClient } from './infrastructure/capy-cloud/main'
-import { isAddress } from './tgbot/filters/is-address'
 import { loadConfigFromEnv } from './infrastructure/config-loader'
 import { run } from '@grammyjs/runner'
 
@@ -45,6 +46,9 @@ async function runApp() {
 
   const bot = new Bot<CommonContext>(config.bot.token)
 
+  // Configure bot
+  // bot.api.config.use(hydrateFiles(bot.token))
+
   // Middlewares
   const dbMiddleware = new DbMiddleware(dataSource)
   const capyCloudAPIMiddleware = new CapyCloudAPIMiddleware(capyCloudClient)
@@ -66,6 +70,7 @@ async function runApp() {
   await bot.api.setMyCommands([
     { command: 'start', description: 'Start bot' },
     { command: 'help', description: 'Show help' },
+    { command: 'providers', description: 'Show providers' },
     { command: 'login', description: 'Login to wallet' },
     { command: 'logout', description: 'Logout from wallet' },
   ])
@@ -89,8 +94,10 @@ async function runApp() {
   bot.filter(loggedUser).callbackQuery('settings', settings)
   bot.filter(unloggedUser).callbackQuery('settings', settingsFromUnloggedUser)
 
-  // Handler for accept provider address and reply provider info
-  bot.filter(isAddress).on(':text', getProviderInfo)
+  // Providers handlers
+  bot.command(['providers'], getProviders)
+  bot.filter(isAddress).on(':text', getProviderParams)
+  bot.filter(isAddressCallback).on('callback_query', setProviderCallback)
 
   // Handlers for upload media
   bot.filter(loggedUser).on([

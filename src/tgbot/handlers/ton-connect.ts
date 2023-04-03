@@ -11,16 +11,19 @@ import { uuid7 } from '@src/utils/uuid'
 
 const TON_CONNECT_SESSIONS_DIR = process.env.TON_CONNECT_SESSIONS_DIR || './tc/'
 
+/**
+ * Login to wallet
+ */
 export async function login(ctx: CommonContext) {
   const message = ctx.message!
   const tgUser = ctx.tgUser!
   const tgUserId = tgUser.id
-  const userSessionPath = TON_CONNECT_SESSIONS_DIR + tgUserId
+  const userSessionPath = `${TON_CONNECT_SESSIONS_DIR}${tgUserId}`
 
   const provider = new TonConnectProvider(new FSStorage(userSessionPath))
   const walletController = new WalletController(provider)
 
-  const payload = await ctx.capyCloudAPI.generatePayload().catch(async (err: any) => {
+  const payload = await ctx.capyCloudAPI.generatePayload().catch(async (err) => {
     console.error(`Error while generating payload: ${err}`)
 
     await ctx.reply(
@@ -29,7 +32,7 @@ export async function login(ctx: CommonContext) {
         message_thread_id: message.message_thread_id,
       }
     )
-  }).then((payload) => (payload || null))
+  })
   if (!payload) return
 
   try {
@@ -92,7 +95,7 @@ export async function login(ctx: CommonContext) {
           }
         )
       })
-      .catch(async (err: any) => {
+      .catch(async (err) => {
         console.error(`Can't login to wallet for user ${tgUserId}: ${err}`)
 
         // Disconnect from wallet, because we no need save session with failed login
@@ -107,7 +110,7 @@ export async function login(ctx: CommonContext) {
           }
         )
       })
-  } catch (err: any) {
+  } catch (err) {
     if (err instanceof WalletAlreadyConnectedError) {
       const address = walletController.getAddress()
 
@@ -129,12 +132,15 @@ export async function login(ctx: CommonContext) {
   }
 }
 
+/**
+ * Logout from wallet
+ */
 export async function logout(ctx: CommonContext) {
   const message = ctx.message!
   const tgUser = ctx.tgUser!
   const tonAddress = tgUser.tonAddress
   const tgUserId = tgUser.id
-  const userSessionPath = TON_CONNECT_SESSIONS_DIR + tgUserId.toString()
+  const userSessionPath = `${TON_CONNECT_SESSIONS_DIR}${tgUserId}`
 
   const provider = new TonConnectProvider(new FSStorage(userSessionPath))
   const walletController = new WalletController(provider)
@@ -142,7 +148,7 @@ export async function logout(ctx: CommonContext) {
   try {
     // Disconnect from wallet and remove session, if it's connected
     await walletController.disconnect()
-  } catch (err: any) {
+  } catch (err) {
     if (err instanceof WalletNotConnectedError) {
       if (!tonAddress) {
         await ctx.reply(
@@ -169,7 +175,7 @@ export async function logout(ctx: CommonContext) {
   }
 
   // Remove session from file system
-  walletController.removeSession().catch((err: any) => {
+  walletController.removeSession().catch((err) => {
     console.error(
       `Can't remove session for user ${tgUserId}: ${err}`,
     )

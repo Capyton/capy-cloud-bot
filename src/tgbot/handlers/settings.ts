@@ -1,6 +1,9 @@
 import { CommonContext } from '@src/tgbot/models/context'
 import { address } from 'ton-core'
 
+/**
+ * Get settings
+ */
 export async function settings(ctx: CommonContext) {
   const callbackQuery = ctx.callbackQuery!
   const message = callbackQuery.message
@@ -16,6 +19,9 @@ export async function settings(ctx: CommonContext) {
   )
 }
 
+/**
+ * Get settings for unlogged user
+ */
 export async function settingsFromUnloggedUser(ctx: CommonContext) {
   await ctx.answerCallbackQuery(
     'You\'re not logged in. Please, login to your wallet to get and change settings.',

@@ -58,18 +58,13 @@ class CapyCloudAPI {
       })
   }
 
-  getAllProviders(): Promise<Provider[]> {
+  getProviders(): Promise<Provider[]> {
     return this.axiosInstance.get('/providers')
       .then((response: AxiosResponse<Provider[]>) => response.data)
   }
 
-  getProviderById(providerAddress: string): Promise<Provider> {
-    return this.axiosInstance.get(`/providers/${providerAddress}`)
-      .then((response: AxiosResponse<Provider>) => response.data)
-  }
-
   getNewContractMessage(providerAddress: string, bagId: string): Promise<NewContractMessageResponse> {
-    return this.axiosInstance.get(`/providers/${providerAddress}/bag/${bagId}/new-contract-message`)
+    return this.axiosInstance.get(`/providers/${providerAddress}/bags/${bagId}/new-contract-message`)
       .then((response: AxiosResponse<NewContractMessageResponse>) => response.data)
   }
 
@@ -79,12 +74,17 @@ class CapyCloudAPI {
   }
 
   createTorrent(request: CreateTorrentRequest): Promise<Torrent> {
-    return this.axiosInstance.post('/create-torrent', request)
+    return this.axiosInstance.post('/torrents', request)
       .then((response: AxiosResponse<Torrent>) => response.data)
   }
 
-  getTorrent(bagID: string): Promise<Torrent> {
-    return this.axiosInstance.get(`/get-torrent/${bagID}`)
+  addTorrentByBagId(bagId: string): Promise<Torrent> {
+    return this.axiosInstance.post(`/torrents/${bagId}/add-by-bag-id`)
+      .then((response: AxiosResponse<Torrent>) => response.data)
+  }
+
+  getTorrent(bagId: string): Promise<Torrent> {
+    return this.axiosInstance.get(`/torrents/${bagId}`)
       .then((response: AxiosResponse<Torrent>) => response.data)
   }
 }
